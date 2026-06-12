@@ -1,221 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ColdReach</title>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>ColdReach</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#e0e0e0;font-family:system-ui,sans-serif;height:100vh;overflow:hidden}
-.shell{display:flex;height:100vh}
-.sidebar{width:220px;background:#0f0f0f;border-right:1px solid #222;padding:20px;overflow-y:auto}
-.logo{font-size:16px;font-weight:700;margin-bottom:30px;color:#fff}
-.nav-item{padding:12px;margin:4px 0;cursor:pointer;border-radius:8px;color:#888;transition:all 0.2s}
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+.sidebar{width:240px;background:#0f0f0f;border-right:1px solid #222;padding:20px;overflow-y:auto;display:flex;flex-direction:column}
+.logo{font-size:16px;font-weight:700;margin-bottom:30px;color:#fff;display:flex;align-items:center;gap:8px}
+.nav{flex:1}
+.nav-item{padding:12px 14px;margin:6px 0;cursor:pointer;border-radius:8px;color:#888;font-size:14px;transition:all 0.2s;border-left:3px solid transparent}
 .nav-item:hover{background:#1a1a1a;color:#fff}
-.nav-item.active{background:#2563eb;color:#fff}
+.nav-item.active{background:#1a2a4a;color:#60a5fa;border-left-color:#2563eb}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.topbar{padding:16px 24px;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px}
-.topbar h2{font-size:18px;font-weight:600}
-.content{flex:1;overflow-y:auto;padding:24px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:18px;text-align:center}
-.stat-value{font-size:32px;font-weight:700;color:#60a5fa;margin-bottom:6px}
-.stat-label{font-size:12px;color:#888;text-transform:uppercase}
-.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;background:#2563eb;color:#fff;transition:all 0.2s}
+.topbar{padding:16px 24px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-title{font-size:18px;font-weight:600}
+.topbar-sub{font-size:12px;color:#888}
+.topbar-actions{display:flex;gap:8px}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;text-align:center}
+.stat-val{font-size:28px;font-weight:700;color:#60a5fa}
+.stat-label{font-size:11px;color:#888;text-transform:uppercase;margin-top:8px}
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;background:#2563eb;color:#fff;transition:all 0.2s;font-size:13px}
 .btn:hover{background:#1d4ed8}
-.btn-secondary{background:#1a1a1a;color:#888;border:1px solid #222}
-.btn-secondary:hover{background:#222;color:#fff}
-.table-wrap{background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden}
-table{width:100%;border-collapse:collapse}
-th{padding:12px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;border-bottom:1px solid #222;background:#0f0f0f}
-td{padding:12px;border-bottom:1px solid #0f0f0f;font-size:13px}
-tr:hover td{background:#111}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-sm{padding:8px 12px;font-size:12px}
+.btn-ghost{background:transparent;color:#888;border:1px solid #222}
+.btn-ghost:hover{background:#1a1a1a;color:#fff}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;padding:20px}
 .modal.show{display:flex}
-.modal-box{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:18px;font-weight:700;margin-bottom:20px}
+.modal-box{background:#0f0f0f;border:1px solid #222;border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column}
+.modal-header{padding:20px 24px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:16px;font-weight:700}
+.modal-body{padding:24px;flex:1;overflow-y:auto}
+.modal-footer{padding:16px 24px;border-top:1px solid #222;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
 .form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:12px;color:#888;margin-bottom:6px;text-transform:uppercase}
-.form-group input,.form-group textarea{width:100%;padding:10px;background:#0f0f0f;border:1px solid #222;border-radius:6px;color:#fff;font-family:inherit;outline:none}
+.form-group label{display:block;font-size:12px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:600}
+.form-group input,.form-group textarea{width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #222;border-radius:7px;color:#e0e0e0;font-family:inherit;outline:none}
 .form-group input:focus,.form-group textarea:focus{border-color:#2563eb}
-.form-group textarea{resize:vertical;min-height:120px}
-.modal-footer{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.form-group textarea{resize:vertical;min-height:120px;font-size:13px;line-height:1.5}
+.drop-zone{border:2px dashed #222;border-radius:10px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#0a0a0a}
+.drop-zone:hover,.drop-zone.drag{border-color:#2563eb;background:#0d0d1a}
+.drop-zone input{display:none}
+.drop-icon{font-size:32px;margin-bottom:12px}
+.drop-text{color:#888;font-size:13px}
+.drop-sub{font-size:11px;color:#666;margin-top:8px}
+.empty{text-align:center;padding:80px 20px;color:#666}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:0.5}
+.empty-text{font-size:16px;font-weight:600;color:#888;margin-bottom:8px}
+.tab{padding:12px 16px;border:none;background:transparent;color:#888;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s}
+.tab:hover{color:#fff}
+.tab.active{color:#60a5fa;border-bottom-color:#2563eb}
+.variables{display:flex;gap:6px;flex-wrap:wrap;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:12px}
+.var-chip{background:#1a1a1a;border:1px solid #222;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;color:#888;cursor:pointer;font-family:monospace;transition:all 0.2s}
+.var-chip:hover{background:#2563eb;border-color:#2563eb;color:#fff}
+.preview-box{background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:16px;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:'Courier New',monospace;max-height:300px;overflow-y:auto}
+.step-card{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s}
+.step-card:hover{border-color:#2563eb}
+.step-card.active{border-color:#2563eb;background:#0d0d1a}
+.step-num{display:inline-block;width:28px;height:28px;background:#2563eb;color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-right:10px;flex-shrink:0}
+.step-title{font-weight:600;color:#e0e0e0;font-size:14px}
+.step-meta{font-size:11px;color:#888;margin-top:6px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600}
 .badge-green{background:#052e16;color:#4ade80}
 .badge-blue{background:#0f2340;color:#60a5fa}
 .badge-gray{background:#1a1a1a;color:#888}
-.empty{text-align:center;padding:60px 20px;color:#666}
-.error{background:#3d0d0d;border:1px solid #6b2323;color:#f87171;padding:12px;border-radius:8px;margin-bottom:16px}
-.success{background:#052e16;border:1px solid #166534;color:#4ade80;padding:12px;border-radius:8px;margin-bottom:16px}
-@media(max-width:768px){.sidebar{width:60px}.sidebar .label{display:none}.nav-item span{display:none}.main{margin-bottom:54px}}
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0f0f0f;border-top:1px solid #222;padding:8px;height:54px}
-.bottom-nav-item{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:25%;cursor:pointer;font-size:10px;color:#666;transition:color 0.2s}
-.bottom-nav-item.active{color:#60a5fa}
-@media(max-width:768px){.sidebar{display:none}.bottom-nav{display:flex}}
+.table-wrap{background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse}th{padding:14px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;border-bottom:1px solid #222;background:#0f0f0f;font-weight:600}
+td{padding:12px 14px;border-bottom:1px solid #0f0f0f;font-size:13px}tr:hover td{background:#111}
+.lead-email{color:#60a5fa;font-weight:500}
+.alert{background:#0d0c1a;border:1px solid #2e2060;color:#a5b4fc;padding:12px;border-radius:8px;margin-bottom:16px;font-size:12px}
+@media(max-width:768px){.sidebar{width:60px}.logo span:nth-child(2){display:none}.nav-item span{display:none}.topbar{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
-<div class="shell">
+<div class="app">
   <div class="sidebar">
-    <div class="logo">❄️ ColdReach</div>
-    <div class="nav-item active" onclick="goPage('dashboard')">📊 Dashboard</div>
-    <div class="nav-item" onclick="goPage('campaigns')">📋 Campaigns</div>
-    <div class="nav-item" onclick="goPage('accounts')">📧 Accounts</div>
-    <div class="nav-item" onclick="goPage('leads')">👥 Leads</div>
+    <div class="logo"><span>❄️</span><span>ColdReach</span></div>
+    <div class="nav">
+      <div class="nav-item active" onclick="goPage('dashboard')"><span>📊 Dashboard</span></div>
+      <div class="nav-item" onclick="goPage('campaigns')"><span>📋 Campaigns</span></div>
+      <div class="nav-item" onclick="goPage('accounts')"><span>📧 Accounts</span></div>
+      <div class="nav-item" onclick="goPage('leads')"><span>👥 All Leads</span></div>
+    </div>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <h2 id="pageTitle">Dashboard</h2>
-      <button class="btn" id="newBtn" style="margin-left:auto;display:none" onclick="openNewModal()">+ New</button>
+      <div class="topbar-left">
+        <div><div class="topbar-title" id="pageTitle">Dashboard</div><div class="topbar-sub" id="pageSub">Your outreach overview</div></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn" id="actionBtn" style="display:none" onclick="handleAction()">+ New</button>
+      </div>
     </div>
     <div class="content" id="content"></div>
   </div>
 </div>
 
-<div class="bottom-nav">
-  <div class="bottom-nav-item active" onclick="goPage('dashboard')">📊</div>
-  <div class="bottom-nav-item" onclick="goPage('campaigns')">📋</div>
-  <div class="bottom-nav-item" onclick="goPage('accounts')">📧</div>
-  <div class="bottom-nav-item" onclick="goPage('leads')">👥</div>
-</div>
-
 <div class="modal" id="modal">
   <div class="modal-box">
-    <div class="modal-title" id="modalTitle">Modal</div>
-    <div id="modalBody"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Modal</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" style="border:none;padding:6px">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn" id="modalSaveBtn" onclick="modalSave()">Save</button>
     </div>
   </div>
 </div>
 
 <script>
-const API = "https://precious-warmth-coldreach.railway.app";
-let currentPage = "dashboard";
-let campaigns = [];
-let leads = [];
-let accounts = [];
-let modalType = "";
-
-async function api(path, opts={}) {
-  try{const r=await fetch(API+path,{headers:{"Content-Type":"application/json"},...opts});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json()}catch(e){console.error(e);alert("API Error: "+e.message);return null}
-}
-
-function goPage(page){
-  currentPage=page;
-  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(".bottom-nav-item").forEach(x=>x.classList.remove("active"));
-  event.target.closest(".nav-item")?.classList.add("active");
-  event.target.closest(".bottom-nav-item")?.classList.add("active");
-  if(page==="dashboard")loadDashboard();
-  if(page==="campaigns")loadCampaigns();
-  if(page==="accounts")loadAccounts();
-  if(page==="leads")loadLeads();
-}
-
-async function loadDashboard(){
-  document.getElementById("pageTitle").textContent="Dashboard";
-  document.getElementById("newBtn").style.display="none";
-  const [c,l,a]=await Promise.all([api("/api/campaigns").catch(()=>[]),api("/api/leads").catch(()=>[]),api("/api/accounts").catch(()=>[])]);
-  campaigns=c||[];leads=l||[];accounts=a||[];
-  const sent=leads.filter(x=>["sent","replied"].includes(x.status)).length;
-  const replied=leads.filter(x=>x.status==="replied").length;
-  document.getElementById("content").innerHTML=`
-    <div class="grid">
-      <div class="stat-card"><div class="stat-value">${campaigns.length}</div><div class="stat-label">Campaigns</div></div>
-      <div class="stat-card"><div class="stat-value">${leads.length}</div><div class="stat-label">Total Leads</div></div>
-      <div class="stat-card"><div class="stat-value">${sent}</div><div class="stat-label">Emails Sent</div></div>
-      <div class="stat-card"><div class="stat-value">${replied}</div><div class="stat-label">Replies</div></div>
-      <div class="stat-card"><div class="stat-value">${accounts.length}</div><div class="stat-label">Accounts</div></div>
-    </div>
-    <div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:20px">
-      <h3 style="margin-bottom:16px">📧 Gmail Accounts</h3>
-      ${accounts.length===0?"<p style='color:#666'>No accounts connected</p>":accounts.map(a=>`
-        <div style="padding:12px;border-bottom:1px solid #222"><strong>${a.email}</strong> • ${a.sent_today||0}/${a.daily_limit||15} sent today</div>
-      `).join("")}
-    </div>
-  `;
-}
-
-async function loadCampaigns(){
-  document.getElementById("pageTitle").textContent="Campaigns";
-  document.getElementById("newBtn").style.display="block";
-  document.getElementById("newBtn").onclick=()=>openNewModal();
-  if(!campaigns.length)campaigns=await api("/api/campaigns")||[];
-  document.getElementById("content").innerHTML=campaigns.length===0?`<div class="empty">📋 No campaigns yet<br><button class="btn" onclick="openNewModal()">+ Create Campaign</button></div>`:`
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Name</th><th>Steps</th><th>Leads</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody>${campaigns.map(c=>`<tr><td>${c.name}</td><td>${(c.steps||[]).length}</td><td>${c.lead_count||0}</td><td><span class="badge ${c.active?"badge-green":"badge-gray"}">${c.active?"Active":"Paused"}</span></td><td><button class="btn btn-secondary" onclick="editCampaign(${c.id})">Edit</button></td></tr>`).join("")}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-async function loadAccounts(){
-  document.getElementById("pageTitle").textContent="Email Accounts";
-  document.getElementById("newBtn").style.display="block";
-  document.getElementById("newBtn").onclick=()=>{modalType="account";openModal("Add Gmail Account","<div class='form-group'><label>Email</label><input id='accEmail' placeholder='you@gmail.com' type='email'/></div><div class='form-group'><label>App Password</label><input id='accPass' placeholder='16-char password' type='password'/></div><div class='form-group'><label>Daily Limit</label><input id='accLimit' value='15' type='number' min='1' max='50'/></div>")};
-  if(!accounts.length)accounts=await api("/api/accounts")||[];
-  document.getElementById("content").innerHTML=accounts.length===0?`<div class="empty">📭 No accounts<br><button class="btn" onclick="document.querySelector('[onclick*=accEmail]')?.click()">+ Add Account</button></div>`:`<div>${accounts.map(a=>{const pct=Math.min(100,((a.sent_today||0)/(a.daily_limit||15))*100);return `<div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:12px"><strong>${a.email}</strong><div style="font-size:12px;color:#888;margin:8px 0">${a.sent_today||0}/${a.daily_limit||15} sent today (${pct.toFixed(0)}%)</div></div>`;}).join("")}</div>`;
-}
-
-async function loadLeads(){
-  document.getElementById("pageTitle").textContent="Leads";
-  document.getElementById("newBtn").style.display="none";
-  if(!leads.length)leads=await api("/api/leads")||[];
-  document.getElementById("content").innerHTML=leads.length===0?`<div class="empty">👥 No leads</div>`:`
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th></tr></thead>
-        <tbody>${leads.map(l=>`<tr><td>${l.email}</td><td>${l.first_name} ${l.last_name}</td><td>${l.company||"-"}</td><td><span class="badge badge-blue">${l.status||"Queued"}</span></td></tr>`).join("")}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function openModal(title,body){
-  document.getElementById("modalTitle").textContent=title;
-  document.getElementById("modalBody").innerHTML=body;
-  document.getElementById("modal").classList.add("show");
-}
-
-function closeModal(){
-  document.getElementById("modal").classList.remove("show");
-  modalType="";
-}
-
-async function modalSave(){
-  if(modalType==="campaign"){
-    const name=document.getElementById("campName")?.value;
-    if(!name){alert("Name required");return}
-    const res=await api("/api/campaigns",{method:"POST",body:JSON.stringify({name,steps:[{subject:"",body:"",delay_days:0}]})});
-    if(res){alert("Campaign created!");closeModal();loadCampaigns()}
-  }
-  if(modalType==="account"){
-    const email=document.getElementById("accEmail")?.value;
-    const pass=document.getElementById("accPass")?.value;
-    const limit=document.getElementById("accLimit")?.value||15;
-    if(!email||!pass){alert("All fields required");return}
-    const res=await api("/api/accounts",{method:"POST",body:JSON.stringify({email,app_password:pass,daily_limit:+limit})});
-    if(res){alert("Account added!");closeModal();loadAccounts()}
-  }
-}
-
-function openNewModal(){
-  if(currentPage==="campaigns"){
-    modalType="campaign";
-    openModal("New Campaign","<div class='form-group'><label>Campaign Name</label><input id='campName' placeholder='e.g. Web Design Outreach' autofocus/></div>");
-  }
-}
-
-function editCampaign(id){
-  const camp=campaigns.find(c=>c.id===id);
-  if(camp)alert("Full campaign editor coming soon. For now, edit via API or backend.");
-}
-
+const API="https://precious-warmth-coldreach.railway.app";let currentPage="dashboard",campaigns=[],accounts=[],modalType="",currentCampaignId="",selectStep=0;const VARS=["{{firstName}}","{{lastName}}","{{email}}","{{company}}"];
+async function req(path,opts={}){try{const r=await fetch(API+path,{headers:{"Content-Type":"application/json"},...opts});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json()}catch(e){console.error(e);alert("Error: "+e.message);return null}}
+function goPage(p){currentPage=p;document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));event.target.closest(".nav-item")?.classList.add("active");if(p==="dashboard")loadDashboard();if(p==="campaigns")loadCampaigns();if(p==="accounts")loadAccounts();if(p==="leads")loadAllLeads()}
+async function loadDashboard(){document.getElementById("pageTitle").textContent="Dashboard";document.getElementById("pageSub").textContent="Your outreach overview";document.getElementById("actionBtn").style.display="none";const data=await req("/api/campaigns");campaigns=data||[];const totalLeads=campaigns.reduce((s,c)=>s+(c.leads?.length||0),0),sent=campaigns.reduce((s,c)=>s+(c.leads?.filter(l=>l.status==="sent").length||0),0),replied=campaigns.reduce((s,c)=>s+(c.leads?.filter(l=>l.replied).length||0),0);document.getElementById("content").innerHTML=`<div class="grid"><div class="stat"><div class="stat-val">${campaigns.length}</div><div class="stat-label">Campaigns</div></div><div class="stat"><div class="stat-val">${totalLeads}</div><div class="stat-label">Total Leads</div></div><div class="stat"><div class="stat-val">${sent}</div><div class="stat-label">Sent</div></div><div class="stat"><div class="stat-val">${replied}</div><div class="stat-label">Replies</div></div></div><h3 style="margin-bottom:16px">📊 Recent Campaigns</h3><div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden">${campaigns.length===0?`<div style="padding:20px;text-align:center;color:#666">No campaigns yet</div>`:`<table><thead><tr><th>Campaign</th><th>Leads</th><th>Sent</th><th>Replied</th></tr></thead><tbody>${campaigns.slice(0,5).map(c=>`<tr><td style="font-weight:600">${c.name}</td><td>${c.leads?.length||0}</td><td>${c.leads?.filter(l=>l.status==="sent").length||0}</td><td>${c.leads?.filter(l=>l.replied).length||0}</td></tr>`).join("")}</tbody></table>`}</div>`}
+async function loadCampaigns(){document.getElementById("pageTitle").textContent="Campaigns";document.getElementById("pageSub").textContent="Create and manage email campaigns";document.getElementById("actionBtn").style.display="block";document.getElementById("actionBtn").textContent="+ New Campaign";document.getElementById("actionBtn").onclick=()=>newCampaign();const data=await req("/api/campaigns");campaigns=data||[];document.getElementById("content").innerHTML=campaigns.length===0?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No campaigns yet</div><button class="btn" onclick="newCampaign()">+ New Campaign</button></div>`:`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">${campaigns.map(c=>`<div class="step-card" onclick="openCampaign('${c.id}')"><div style="display:flex;justify-content:space-between"><div style="flex:1"><div class="step-title">${c.name}</div><div class="step-meta" style="margin-top:8px">${c.leads?.length||0} leads</div></div><span class="badge badge-${c.status==="active"?"green":"gray"}">${c.status}</span></div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;display:flex;justify-content:space-between"><div style="font-size:11px;color:#666">Sent: ${c.leads?.filter(l=>l.status==="sent").length||0}</div><div style="font-size:11px;color:#666">Replied: ${c.leads?.filter(l=>l.replied).length||0}</div></div></div>`).join("")}</div>`}
+async function openCampaign(id){currentCampaignId=id;const c=campaigns.find(x=>x.id===id);if(!c)return;document.getElementById("pageTitle").textContent=c.name;document.getElementById("pageSub").textContent=`${c.leads?.length||0} leads`;document.getElementById("actionBtn").style.display="block";document.getElementById("actionBtn").textContent="+ Add Leads";document.getElementById("actionBtn").onclick=()=>{modalType="leads";openModal("Add Leads","<div><button class='tab active' onclick='swapTab(\"csv\")'>📂 CSV Upload</button><button class='tab' onclick='swapTab(\"manual\")'>✍️ Manual</button></div><div id='csvTab'><div class='drop-zone' ondragover='event.preventDefault();this.classList.add(\"drag\")' ondragleave='this.classList.remove(\"drag\")' ondrop='handleDrop(event)'><input id='csvFile' type='file' accept='.csv' onchange='handleCSVFile(event)'><div class='drop-icon'>📂</div><div class='drop-text'>Drop CSV or click</div><div class='drop-sub'>Columns: firstName,lastName,email,company</div></div><div id='csvPreview'></div></div><div id='manualTab' style='display:none'><div class='form-group'><label>Email</label><input id='leadEmail' type='email' placeholder='john@company.com'/></div><div class='form-group'><label>First Name</label><input id='leadFn' placeholder='John'/></div><div class='form-group'><label>Last Name</label><input id='leadLn' placeholder='Doe'/></div><div class='form-group'><label>Company</label><input id='leadCo' placeholder='Acme'/></div></div>")};const html=`<div style="display:grid;grid-template-columns:220px 1fr;gap:20px;margin-bottom:20px"><div><h4 style="margin-bottom:12px;font-size:12px;font-weight:600;color:#888">SEQUENCE</h4><div>${(c.sequence||[]).map((s,i)=>`<div class="step-card ${i===selectStep?"active":""}" onclick="selectStep=${i};openCampaign('${id}')" style="margin-bottom:6px"><div class="step-num">${i+1}</div><div class="step-title" style="font-size:12px">Step ${i+1}</div><div class="step-meta">${i===0?"Initial":"Day +"+s.day}</div></div>`).join("")}</div><button class="btn" style="width:100%;margin-top:12px;font-size:12px;padding:8px" onclick="addStep('${id}')">+ Add Step</button></div><div><div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:16px">${c.sequence&&c.sequence[selectStep]?`<div class="form-group"><label>Subject</label><input id="stepSubject" value="${(c.sequence[selectStep].subject||"").replace(/"/g,"&quot;")}" placeholder="Subject line"/></div><div class="form-group"><label>Body</label><textarea id="stepBody">${c.sequence[selectStep].body||""}</textarea></div><div style="margin-bottom:16px"><label style="font-size:11px;color:#666;display:block;margin-bottom:8px">Insert Variables:</label><div class="variables">${VARS.map(v=>`<div class="var-chip" onclick="insertVar('${v}')">${v}</div>`).join("")}</div></div><button class="btn" onclick="saveStep('${id}',${selectStep})" style="width:100%">💾 Save</button>`:""}</div><div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px"><h4 style="font-size:12px;margin-bottom:8px">PREVIEW</h4><div style="background:#0a0a0a;border:1px solid #222;border-radius:6px;padding:10px;font-size:11px;font-family:monospace"><strong style="color:#60a5fa">Subject:</strong><div>${c.sequence&&c.sequence[selectStep]?c.sequence[selectStep].subject:"(empty)"}</div><strong style="color:#60a5fa;margin-top:10px;display:block">Body:</strong><div class="preview-box" style="margin-top:6px">${c.sequence&&c.sequence[selectStep]?c.sequence[selectStep].body:"(empty)"}</div></div></div></div></div><div><h4 style="margin-bottom:12px;font-size:12px;font-weight:600;color:#888">LEADS (${c.leads?.length||0})</h4><div class="table-wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th><th>Replied</th></tr></thead><tbody>${(c.leads||[]).map(l=>`<tr><td style="color:#60a5fa">${l.email}</td><td>${l.firstName||"?"} ${l.lastName||""}</td><td>${l.company||"-"}</td><td><span class="badge badge-${l.status==="sent"?"blue":"gray"}">${l.status||"Queued"}</span></td><td><span class="badge badge-${l.replied?"green":"gray"}">${l.replied?"✓ Yes":"No"}</span></td></tr>`).join("")}</tbody></table></div></div>`;document.getElementById("content").innerHTML=html}
+function insertVar(v){const el=document.getElementById("stepBody");if(el){const s=el.selectionStart,e=el.selectionEnd,val=el.value;el.value=val.slice(0,s)+v+val.slice(e);el.selectionStart=el.selectionEnd=s+v.length}}
+async function saveStep(id,idx){const subj=document.getElementById("stepSubject")?.value,body=document.getElementById("stepBody")?.value;if(!subj||!body){alert("Required");return}const c=campaigns.find(x=>x.id===id);c.sequence[idx]={day:idx,subject:subj,body:body};const res=await req(`/api/campaigns/${id}`,{method:"PUT",body:JSON.stringify({name:c.name,status:c.status,sequence:c.sequence,leads:c.leads})});if(res){openCampaign(id)}}
+async function addStep(id){const c=campaigns.find(x=>x.id===id);c.sequence.push({day:c.sequence.length,subject:"",body:""});const res=await req(`/api/campaigns/${id}`,{method:"PUT",body:JSON.stringify({name:c.name,status:c.status,sequence:c.sequence,leads:c.leads})});if(res)openCampaign(id)}
+function swapTab(t){const csv=document.getElementById("csvTab"),man=document.getElementById("manualTab"),btn=document.querySelectorAll(".tab");if(t==="csv"){csv.style.display="block";man.style.display="none";btn[0].classList.add("active");btn[1].classList.remove("active")}else{csv.style.display="none";man.style.display="block";btn[0].classList.remove("active");btn[1].classList.add("active")}}
+function handleDrop(e){e.preventDefault();e.currentTarget.classList.remove("drag");const f=e.dataTransfer.files[0];if(f)handleCSVFile({target:{files:[f]}})}
+function handleCSVFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>{const lines=x.target.result.split("\n").filter(l=>l.trim()).slice(1),leads=lines.map(l=>{const[fn,ln,em,co]=l.split(",").map(v=>v.trim());return{firstName:fn,lastName:ln,email:em,company:co}}).filter(x=>x.email);window.csvLeads=leads;document.getElementById("csvPreview").innerHTML=`<div style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:12px;margin-top:12px;color:#4ade80;font-weight:600">${leads.length} leads ready</div>`};r.readAsText(f)}
+function newCampaign(){modalType="campaign";openModal("Create Campaign","<div class='form-group'><label>Campaign Name</label><input id='campName' placeholder='Web Design Outreach - US Q3' autofocus/></div>")}
+async function loadAccounts(){document.getElementById("pageTitle").textContent="Email Accounts";document.getElementById("pageSub").textContent="Add and manage Gmail accounts";document.getElementById("actionBtn").style.display="block";document.getElementById("actionBtn").textContent="+ Add Account";document.getElementById("actionBtn").onclick=()=>{modalType="account";openModal("Add Gmail Account","<div class='alert'><strong>App Password Required</strong><div style='font-size:11px;margin-top:6px'>Google Account → Security → 2-Step Verification → App Passwords</div></div><div class='form-group'><label>Email</label><input id='accEmail' type='email' placeholder='you@gmail.com'/></div><div class='form-group'><label>App Password</label><input id='accPass' type='password' placeholder='16-char password'/></div><div class='form-group'><label>Daily Limit</label><input id='accLimit' type='number' value='15' min='1' max='50'/></div>")};const data=await req("/api/accounts");accounts=data||[];document.getElementById("content").innerHTML=accounts.length===0?`<div class="empty"><div class="empty-icon">📧</div><div class="empty-text">No accounts connected</div><button class="btn" onclick="document.getElementById('actionBtn').click()">+ Add Account</button></div>`:`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">${accounts.map(a=>{const pct=Math.min(100,((a.sentToday||0)/(a.limit||15))*100);return`<div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px"><div style="font-weight:600;color:#e0e0e0">${a.email}</div><div style="font-size:12px;color:#888;margin:10px 0">Limit: ${a.limit} emails/day</div><div style="height:4px;background:#222;border-radius:2px;overflow:hidden;margin:10px 0"><div style="height:100%;background:${pct>80?"#ef4444":"#4ade80"};width:${pct}%"></div></div><div style="font-size:11px;color:#666">${a.sentToday||0}/${a.limit} sent today (${pct.toFixed(0)}%)</div></div>`}).join("")}</div>`}
+async function loadAllLeads(){document.getElementById("pageTitle").textContent="All Leads";document.getElementById("pageSub").textContent="Manage leads across campaigns";document.getElementById("actionBtn").style.display="none";const data=await req("/api/campaigns");campaigns=data||[];const allLeads=campaigns.flatMap(c=>(c.leads||[]).map(l=>({...l,campaign:c.name})));const replied=allLeads.filter(l=>l.replied),sent=allLeads.filter(l=>l.status==="sent");document.getElementById("content").innerHTML=`<div class="grid"><div class="stat"><div class="stat-val">${allLeads.length}</div><div class="stat-label">Total</div></div><div class="stat"><div class="stat-val">${sent.length}</div><div class="stat-label">Sent</div></div><div class="stat"><div class="stat-val">${replied.length}</div><div class="stat-label">Replied</div></div></div><div class="table-wrap"><table><thead><tr><th>Email</th><th>Campaign</th><th>Status</th><th>Replied</th></tr></thead><tbody>${allLeads.map(l=>`<tr><td style="color:#60a5fa">${l.email}</td><td style="font-size:12px">${l.campaign}</td><td><span class="badge badge-${l.status==="sent"?"blue":"gray"}">${l.status||"Queued"}</span></td><td><span class="badge badge-${l.replied?"green":"gray"}">${l.replied?"✓":"No"}</span></td></tr>`).join("")}</tbody></table></div>`}
+function openModal(title,body){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=body;document.getElementById("modal").classList.add("show");document.getElementById("modalSaveBtn").textContent="Save"}
+function closeModal(){document.getElementById("modal").classList.remove("show");modalType="";window.csvLeads=null}
+async function modalSave(){if(modalType==="campaign"){const name=document.getElementById("campName")?.value;if(!name)return;const res=await req("/api/campaigns",{method:"POST",body:JSON.stringify({name,sequence:[]})});if(res)closeModal(),loadCampaigns()}if(modalType==="account"){const email=document.getElementById("accEmail")?.value,pass=document.getElementById("accPass")?.value,limit=document.getElementById("accLimit")?.value||15;if(!email||!pass)return;const res=await req("/api/accounts",{method:"POST",body:JSON.stringify({email,label:email,limit:+limit,appPassword:pass})});if(res)closeModal(),loadAccounts()}if(modalType==="leads"){const em=document.getElementById("leadEmail")?.value,fn=document.getElementById("leadFn")?.value,ln=document.getElementById("leadLn")?.value,co=document.getElementById("leadCo")?.value;if(!window.csvLeads&&!em)return;const leads=window.csvLeads||[{firstName:fn,lastName:ln,email:em,company:co}];const res=await req(`/api/campaigns/${currentCampaignId}/leads`,{method:"POST",body:JSON.stringify({leads})});if(res)closeModal(),openCampaign(currentCampaignId)}}
+function handleAction(){}
 loadDashboard();
 </script>
 </body>
