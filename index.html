@@ -1,991 +1,222 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>ColdReach</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:#09090b;color:#e4e4e7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:#09090b}::-webkit-scrollbar-thumb{background:#27272a;border-radius:3px}
-
-/* ── SHELL ── */
-.shell{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;background:#09090b;border-right:1px solid #18181b;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-.sidebar-logo{padding:16px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #18181b}
-.logo-box{width:30px;height:30px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.logo-name{font-size:15px;font-weight:700;color:#fafafa;letter-spacing:-0.3px}
-.logo-plan{font-size:10px;color:#52525b;margin-top:1px}
-.sidebar-section{padding:10px 8px 4px;font-size:10px;color:#3f3f46;text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
-.sidebar-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;cursor:pointer;color:#71717a;font-size:13px;font-weight:500;transition:all 0.12s;margin:1px 4px}
-.sidebar-item:hover{background:#18181b;color:#a1a1aa}
-.sidebar-item.on{background:#1c1c1f;color:#e4e4e7}
-.sidebar-item.on .s-icon{color:#6366f1}
-.s-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
-.sidebar-bottom{margin-top:auto;padding:10px 8px;border-top:1px solid #18181b}
-.page{flex:1;overflow-y:auto;overflow-x:hidden}
-
-/* ── MOBILE ── */
-.mob-header{display:none;align-items:center;gap:10px;padding:12px 14px;background:#09090b;border-bottom:1px solid #18181b;position:sticky;top:0;z-index:30}
-.mob-menu-btn{background:#18181b;border:1px solid #27272a;border-radius:7px;padding:6px 10px;color:#a1a1aa;cursor:pointer;font-size:16px}
-.bot-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#09090b;border-top:1px solid #18181b;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-.bot-nav-row{display:flex;height:54px}
-.bot-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:#52525b;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.2px}
-.bot-item.on{color:#6366f1}
-.bot-icon{font-size:18px;line-height:1}
-.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:40}
-.drawer-overlay.show{display:block}
-.drawer{position:fixed;left:0;top:0;bottom:0;width:240px;background:#09090b;border-right:1px solid #18181b;z-index:41;transform:translateX(-100%);transition:transform 0.2s;overflow-y:auto}
-.drawer.open{transform:translateX(0)}
-
-/* ── CAMPAIGNS LIST ── */
-.page-wrap{padding:24px 28px;max-width:1200px}
-.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.page-title{font-size:19px;font-weight:700;color:#fafafa;letter-spacing:-0.3px}
-.page-sub{font-size:12px;color:#52525b;margin-top:3px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all 0.12s;white-space:nowrap;line-height:1.2}
-.btn:disabled{opacity:0.45;cursor:not-allowed}
-.btn-v{background:#6366f1;color:#fff}
-.btn-v:hover:not(:disabled){background:#5558e3}
-.btn-g{background:#18181b;color:#a1a1aa;border:1px solid #27272a}
-.btn-g:hover:not(:disabled){background:#27272a;color:#e4e4e7}
-.btn-r{background:transparent;color:#f87171;border:1px solid #2d1a1a}
-.btn-r:hover:not(:disabled){background:#2d1a1a}
-.btn-ok{background:#14532d;color:#86efac;border:1px solid #166534}
-.btn-ok:hover:not(:disabled){background:#166534}
-.btn-sm{padding:6px 11px;font-size:12px;border-radius:6px}
-.btn-xs{padding:4px 9px;font-size:11px;border-radius:5px}
-.btn-full{width:100%;justify-content:center}
-
-/* ── CAMP CARDS ── */
-.camp-grid{display:flex;flex-direction:column;gap:8px}
-.camp-row{background:#0f0f11;border:1px solid #18181b;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border-color 0.12s}
-.camp-row:hover{border-color:#3f3f46}
-.camp-row-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
-.camp-row-dot.off{background:#3f3f46}
-.camp-row-name{font-size:14px;font-weight:600;color:#fafafa;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.camp-row-meta{display:flex;align-items:center;gap:16px;flex-shrink:0}
-.camp-stat{text-align:right}
-.camp-stat-val{font-size:13px;font-weight:700;color:#e4e4e7}
-.camp-stat-label{font-size:10px;color:#52525b;text-transform:uppercase;letter-spacing:0.3px}
-.camp-row-actions{display:flex;gap:6px;flex-shrink:0}
-
-/* ── CAMPAIGN DETAIL ── */
-.camp-detail{height:100%;display:flex;flex-direction:column}
-.camp-topbar{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #18181b;background:#09090b;position:sticky;top:0;z-index:20;flex-wrap:wrap}
-.camp-back{background:#18181b;border:1px solid #27272a;border-radius:7px;padding:7px 12px;color:#a1a1aa;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
-.camp-back:hover{color:#e4e4e7;background:#27272a}
-.camp-topbar-name{font-size:15px;font-weight:700;color:#fafafa;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.camp-status-toggle{display:flex;align-items:center;gap:8px;background:#18181b;border:1px solid #27272a;border-radius:7px;padding:6px 12px;cursor:pointer}
-.camp-status-toggle .dot{width:7px;height:7px;border-radius:50%;background:#22c55e}
-.camp-status-toggle .dot.off{background:#3f3f46}
-.camp-tabs{display:flex;align-items:center;gap:2px;padding:0 20px;border-bottom:1px solid #18181b;background:#09090b;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.camp-tabs::-webkit-scrollbar{display:none}
-.camp-tab{padding:12px 16px;font-size:13px;font-weight:500;color:#71717a;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.12s;display:flex;align-items:center;gap:6px}
-.camp-tab:hover{color:#a1a1aa}
-.camp-tab.on{color:#6366f1;border-bottom-color:#6366f1;font-weight:600}
-.camp-body{flex:1;overflow-y:auto;padding:24px 24px;padding-bottom:32px}
-
-/* ── ANALYTICS STATS ── */
-.analytics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
-.a-stat{background:#0f0f11;border:1px solid #18181b;border-radius:10px;padding:16px}
-.a-stat-val{font-size:22px;font-weight:800;color:#fafafa;letter-spacing:-0.5px}
-.a-stat-label{font-size:11px;color:#52525b;text-transform:uppercase;letter-spacing:0.4px;margin-top:6px}
-.a-stat-sub{font-size:11px;color:#3f3f46;margin-top:3px}
-
-/* ── LEADS TAB ── */
-.leads-toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.search-box{position:relative;flex:1;min-width:180px}
-.search-box input{padding-left:34px}
-.search-box-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#52525b;font-size:14px;pointer-events:none}
-.filter-select{background:#18181b;border:1px solid #27272a;border-radius:7px;color:#a1a1aa;padding:8px 12px;font-size:13px;outline:none;font-family:inherit}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #18181b;border-radius:10px}
-table{width:100%;border-collapse:collapse;min-width:560px}
-th{text-align:left;padding:10px 14px;color:#3f3f46;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid #18181b;background:#0f0f11;white-space:nowrap}
-td{padding:11px 14px;font-size:13px;color:#a1a1aa;border-bottom:1px solid #0f0f11;vertical-align:middle}
-td.pri{color:#e4e4e7;font-weight:500}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,0.015)}
-.tbl-empty{padding:52px;text-align:center;color:#3f3f46}
-.tbl-empty-icon{font-size:36px;margin-bottom:10px;opacity:0.5}
-.tbl-empty-text{font-size:14px;font-weight:600;color:#52525b}
-.tbl-empty-sub{font-size:12px;color:#3f3f46;margin-top:5px;margin-bottom:18px}
-
-/* ── BADGE ── */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.8}
-.bv{background:#1a1040;color:#818cf8;border:1px solid #2e2060}
-.bg{background:#052e16;color:#4ade80;border:1px solid #14532d}
-.by{background:#1c1200;color:#fbbf24;border:1px solid #3d2800}
-.br{background:#1a0505;color:#f87171;border:1px solid #3d0d0d}
-.bz{background:#18181b;color:#52525b;border:1px solid #27272a}
-.bp{background:#160d2e;color:#a78bfa;border:1px solid #2e1f5e}
-
-/* ── CSV UPLOAD ── */
-.drop-zone{border:2px dashed #27272a;border-radius:10px;padding:36px 24px;text-align:center;cursor:pointer;transition:all 0.15s;background:#0a0a0d}
-.drop-zone:hover,.drop-zone.drag{border-color:#6366f1;background:#0d0c1a}
-.drop-zone input[type=file]{display:none}
-.drop-icon{font-size:38px;margin-bottom:12px}
-.drop-title{font-size:14px;font-weight:600;color:#a1a1aa;margin-bottom:6px}
-.drop-sub{font-size:12px;color:#52525b}
-.drop-hint{font-size:11px;color:#3f3f46;margin-top:8px;background:#18181b;border-radius:6px;padding:6px 10px;display:inline-block}
-
-/* ── SEQUENCE BUILDER ── */
-.seq-wrap{display:flex;gap:20px;align-items:flex-start}
-.seq-steps{display:flex;flex-direction:column;gap:0;width:220px;flex-shrink:0}
-.seq-step-btn{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f0f11;border:1px solid #18181b;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.12s;position:relative}
-.seq-step-btn:hover{border-color:#27272a}
-.seq-step-btn.on{border-color:#6366f1;background:#0d0c1a}
-.seq-step-num{width:24px;height:24px;border-radius:6px;background:#1c1c1f;color:#a1a1aa;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.seq-step-btn.on .seq-step-num{background:#4f46e5;color:#fff}
-.seq-step-info{flex:1;min-width:0}
-.seq-step-title{font-size:12px;font-weight:600;color:#e4e4e7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.seq-step-delay{font-size:10px;color:#52525b;margin-top:2px}
-.seq-add-btn{border:1px dashed #27272a;border-radius:8px;padding:10px;text-align:center;cursor:pointer;color:#52525b;font-size:12px;font-weight:500;transition:all 0.12s}
-.seq-add-btn:hover{border-color:#6366f1;color:#6366f1;background:#0d0c1a}
-.seq-editor{flex:1;min-width:0}
-.seq-editor-card{background:#0f0f11;border:1px solid #18181b;border-radius:10px;overflow:hidden}
-.seq-editor-head{padding:14px 18px;border-bottom:1px solid #18181b;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.seq-editor-label{font-size:12px;font-weight:600;color:#71717a;text-transform:uppercase;letter-spacing:0.4px}
-.delay-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#a1a1aa}
-.delay-row input{width:56px;text-align:center;padding:6px 8px}
-.seq-editor-body{padding:18px}
-.vars-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;background:#0a0a0d;border-radius:8px;border:1px solid #18181b}
-.var-chip{background:#1c1c1f;border:1px solid #27272a;border-radius:5px;padding:4px 9px;font-size:11px;font-weight:600;color:#a1a1aa;cursor:pointer;font-family:monospace;transition:all 0.1s}
-.var-chip:hover{background:#6366f1;border-color:#6366f1;color:#fff}
-.editor-field{margin-bottom:14px}
-.editor-label{font-size:11px;font-weight:600;color:#52525b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px}
-.editor-input{background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:10px 13px;font-size:13px;width:100%;outline:none;font-family:inherit;transition:border-color 0.12s}
-.editor-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-.editor-textarea{background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:12px 13px;font-size:13px;width:100%;outline:none;font-family:inherit;transition:border-color 0.12s;resize:vertical;min-height:240px;line-height:1.6}
-.editor-textarea:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-
-/* ── SCHEDULE ── */
-.schedule-card{background:#0f0f11;border:1px solid #18181b;border-radius:10px;padding:20px;margin-bottom:14px}
-.schedule-title{font-size:13px;font-weight:600;color:#e4e4e7;margin-bottom:16px}
-.days-row{display:flex;gap:8px;flex-wrap:wrap}
-.day-btn{width:44px;height:44px;border-radius:8px;border:1px solid #27272a;background:#18181b;color:#71717a;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center}
-.day-btn.on{background:#4f46e5;border-color:#6366f1;color:#fff}
-.time-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.time-row input{width:130px;background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
-.time-row input:focus{border-color:#6366f1}
-.time-sep{color:#52525b;font-size:12px}
-.tz-select{background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
-.tz-select:focus{border-color:#6366f1}
-
-/* ── REVIEW ── */
-.review-card{background:#0f0f11;border:1px solid #18181b;border-radius:10px;overflow:hidden;margin-bottom:14px}
-.review-head{padding:14px 18px;border-bottom:1px solid #18181b;display:flex;align-items:center;justify-content:space-between}
-.review-step-label{font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:0.5px}
-.review-subject{font-size:14px;font-weight:600;color:#fafafa;margin-top:4px}
-.review-body-wrap{padding:18px;font-size:13px;color:#a1a1aa;line-height:1.7;white-space:pre-wrap;font-family:'Courier New',monospace;background:#0a0a0d;border-radius:0 0 10px 10px}
-.review-select{background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:8px 12px;font-size:13px;outline:none;font-family:inherit;margin-bottom:16px}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
-.modal-box{background:#0f0f11;border:1px solid #27272a;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:popIn 0.18s ease}
-@keyframes popIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
-.modal-head{padding:18px 22px 14px;border-bottom:1px solid #18181b;display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-size:15px;font-weight:700;color:#fafafa}
-.modal-body{padding:18px 22px}
-.modal-foot{padding:14px 22px;border-top:1px solid #18181b;display:flex;gap:8px;justify-content:flex-end}
-.form-group{margin-bottom:14px}
-.form-label{display:block;font-size:11px;font-weight:600;color:#52525b;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px}
-.form-input{background:#0a0a0d;border:1px solid #27272a;border-radius:7px;color:#e4e4e7;padding:10px 13px;font-size:13px;width:100%;outline:none;font-family:inherit;transition:border-color 0.12s}
-.form-input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hint{font-size:11px;color:#52525b;margin-top:5px;line-height:1.4}
-
-/* ── ALERT ── */
-.alert{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;display:flex;gap:8px;line-height:1.5}
-.alert-icon{flex-shrink:0}
-.al-info{background:#0d0c1a;border:1px solid #2e2060;color:#a5b4fc}
-.al-warn{background:#1a1100;border:1px solid #422006;color:#fcd34d}
-.al-err{background:#1a0505;border:1px solid #3d0d0d;color:#fca5a5}
-.al-ok{background:#052e16;border:1px solid #14532d;color:#86efac}
-
-/* ── TOAST ── */
-.toast-stack{position:fixed;bottom:20px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px;max-width:300px}
-.toast{background:#18181b;border:1px solid #27272a;border-radius:9px;padding:11px 14px;font-size:13px;display:flex;align-items:center;gap:9px;animation:toastIn 0.2s ease;box-shadow:0 10px 30px rgba(0,0,0,0.5);cursor:pointer}
-.toast.tok{border-color:#14532d;background:#052e16;color:#86efac}
-.toast.terr{border-color:#3d0d0d;background:#1a0505;color:#fca5a5}
-.toast.tinf{border-color:#2e2060;background:#0d0c1a;color:#a5b4fc}
-@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── PROGRESS ── */
-.prog-bar{height:4px;background:#18181b;border-radius:2px;overflow:hidden;margin-top:6px}
-.prog-fill{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:2px;transition:width 0.3s}
-
-/* ── EMPTY ── */
-.empty-box{padding:64px 24px;text-align:center}
-.empty-icon{font-size:42px;margin-bottom:14px;opacity:0.4}
-.empty-title{font-size:15px;font-weight:600;color:#52525b;margin-bottom:6px}
-.empty-sub{font-size:12px;color:#3f3f46;margin-bottom:20px}
-
-/* ── ACCOUNTS ── */
-.acc-card{background:#0f0f11;border:1px solid #18181b;border-radius:10px;padding:16px 18px;margin-bottom:8px}
-.acc-email{font-size:14px;font-weight:600;color:#fafafa}
-.acc-bar{height:5px;background:#18181b;border-radius:3px;margin:10px 0 6px;overflow:hidden}
-.acc-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width 0.3s}
-.acc-fill.warn{background:linear-gradient(90deg,#f59e0b,#d97706)}
-.acc-fill.over{background:linear-gradient(90deg,#ef4444,#dc2626)}
-
-/* ── MISC ── */
-.divider{height:1px;background:#18181b;margin:16px 0}
-.flex{display:flex}.ic{align-items:center}.jb{justify-content:space-between}.gap2{gap:8px}.gap3{gap:12px}
-.muted{color:#52525b}.sm{font-size:13px}.xs{font-size:11px}.bold{font-weight:700}.semi{font-weight:600}
-.mb1{margin-bottom:6px}.mb2{margin-bottom:10px}.mb3{margin-bottom:14px}.mb4{margin-bottom:20px}
-.mt2{margin-top:10px}.mt3{margin-top:14px}
-.w100{width:100%}
-.chip-row{display:flex;gap:6px;flex-wrap:wrap}
-
-/* ── RESPONSIVE ── */
-@media(max-width:900px){.analytics-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:768px){
-  .sidebar{display:none}
-  .page{padding-bottom:60px}
-  .mob-header{display:flex}
-  .bot-nav{display:block}
-  .page-wrap{padding:16px}
-  .analytics-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-  .seq-wrap{flex-direction:column}
-  .seq-steps{width:100%}
-  .camp-row-meta{display:none}
-  .camp-row-actions{gap:4px}
-  .form-row{grid-template-columns:1fr}
-  .modal-box{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;max-height:92vh;animation:slideUp2 0.2s ease}
-  @keyframes slideUp2{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .modal-overlay{align-items:flex-end;padding:0}
-  .modal-foot{flex-direction:column-reverse}
-  .modal-foot .btn{width:100%;justify-content:center}
-  .camp-topbar{padding:10px 14px;gap:8px}
-  .camp-body{padding:14px}
-  .camp-tabs{padding:0 8px}
-  .camp-tab{padding:10px 12px;font-size:12px}
-}
-@media(max-width:480px){.analytics-grid{grid-template-columns:1fr 1fr}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e0e0e0;font-family:system-ui,sans-serif;height:100vh;overflow:hidden}
+.shell{display:flex;height:100vh}
+.sidebar{width:220px;background:#0f0f0f;border-right:1px solid #222;padding:20px;overflow-y:auto}
+.logo{font-size:16px;font-weight:700;margin-bottom:30px;color:#fff}
+.nav-item{padding:12px;margin:4px 0;cursor:pointer;border-radius:8px;color:#888;transition:all 0.2s}
+.nav-item:hover{background:#1a1a1a;color:#fff}
+.nav-item.active{background:#2563eb;color:#fff}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:16px 24px;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px}
+.topbar h2{font-size:18px;font-weight:600}
+.content{flex:1;overflow-y:auto;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:18px;text-align:center}
+.stat-value{font-size:32px;font-weight:700;color:#60a5fa;margin-bottom:6px}
+.stat-label{font-size:12px;color:#888;text-transform:uppercase}
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;background:#2563eb;color:#fff;transition:all 0.2s}
+.btn:hover{background:#1d4ed8}
+.btn-secondary{background:#1a1a1a;color:#888;border:1px solid #222}
+.btn-secondary:hover{background:#222;color:#fff}
+.table-wrap{background:#1a1a1a;border:1px solid #222;border-radius:10px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:12px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;border-bottom:1px solid #222;background:#0f0f0f}
+td{padding:12px;border-bottom:1px solid #0f0f0f;font-size:13px}
+tr:hover td{background:#111}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#1a1a1a;border:1px solid #222;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:#888;margin-bottom:6px;text-transform:uppercase}
+.form-group input,.form-group textarea{width:100%;padding:10px;background:#0f0f0f;border:1px solid #222;border-radius:6px;color:#fff;font-family:inherit;outline:none}
+.form-group input:focus,.form-group textarea:focus{border-color:#2563eb}
+.form-group textarea{resize:vertical;min-height:120px}
+.modal-footer{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#052e16;color:#4ade80}
+.badge-blue{background:#0f2340;color:#60a5fa}
+.badge-gray{background:#1a1a1a;color:#888}
+.empty{text-align:center;padding:60px 20px;color:#666}
+.error{background:#3d0d0d;border:1px solid #6b2323;color:#f87171;padding:12px;border-radius:8px;margin-bottom:16px}
+.success{background:#052e16;border:1px solid #166534;color:#4ade80;padding:12px;border-radius:8px;margin-bottom:16px}
+@media(max-width:768px){.sidebar{width:60px}.sidebar .label{display:none}.nav-item span{display:none}.main{margin-bottom:54px}}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0f0f0f;border-top:1px solid #222;padding:8px;height:54px}
+.bottom-nav-item{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:25%;cursor:pointer;font-size:10px;color:#666;transition:color 0.2s}
+.bottom-nav-item.active{color:#60a5fa}
+@media(max-width:768px){.sidebar{display:none}.bottom-nav{display:flex}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
+<div class="shell">
+  <div class="sidebar">
+    <div class="logo">❄️ ColdReach</div>
+    <div class="nav-item active" onclick="goPage('dashboard')">📊 Dashboard</div>
+    <div class="nav-item" onclick="goPage('campaigns')">📋 Campaigns</div>
+    <div class="nav-item" onclick="goPage('accounts')">📧 Accounts</div>
+    <div class="nav-item" onclick="goPage('leads')">👥 Leads</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <button class="btn" id="newBtn" style="margin-left:auto;display:none" onclick="openNewModal()">+ New</button>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="bottom-nav-item active" onclick="goPage('dashboard')">📊</div>
+  <div class="bottom-nav-item" onclick="goPage('campaigns')">📋</div>
+  <div class="bottom-nav-item" onclick="goPage('accounts')">📧</div>
+  <div class="bottom-nav-item" onclick="goPage('leads')">👥</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Modal</div>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="modalSaveBtn" onclick="modalSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
 const API = "https://precious-warmth-coldreach.railway.app";
-const { useState, useEffect, useCallback, useRef } = React;
+let currentPage = "dashboard";
+let campaigns = [];
+let leads = [];
+let accounts = [];
+let modalType = "";
 
-async function req(path, opts={}) {
-  const r = await fetch(API+path, { headers:{"Content-Type":"application/json"}, ...opts });
-  if (!r.ok) throw new Error((await r.text())||`HTTP ${r.status}`);
-  return r.json();
+async function api(path, opts={}) {
+  try{const r=await fetch(API+path,{headers:{"Content-Type":"application/json"},...opts});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json()}catch(e){console.error(e);alert("API Error: "+e.message);return null}
 }
 
-// ── Toast ──────────────────────────────────────────────
-function useToast() {
-  const [list, setList] = useState([]);
-  const add = useCallback((msg, type="ok") => {
-    const id = Date.now();
-    setList(p => [...p, {id, msg, type}]);
-    setTimeout(() => setList(p => p.filter(t => t.id !== id)), 3200);
-  }, []);
-  return { list, add, remove: id => setList(p => p.filter(t => t.id !== id)) };
-}
-function Toasts({list, remove}) {
-  return <div className="toast-stack">{list.map(t => <div key={t.id} className={`toast t${t.type}`} onClick={()=>remove(t.id)}><span>{t.type==="ok"?"✓":t.type==="err"?"✕":"ℹ"}</span><span>{t.msg}</span></div>)}</div>;
+function goPage(page){
+  currentPage=page;
+  document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".bottom-nav-item").forEach(x=>x.classList.remove("active"));
+  event.target.closest(".nav-item")?.classList.add("active");
+  event.target.closest(".bottom-nav-item")?.classList.add("active");
+  if(page==="dashboard")loadDashboard();
+  if(page==="campaigns")loadCampaigns();
+  if(page==="accounts")loadAccounts();
+  if(page==="leads")loadLeads();
 }
 
-// ── Variables ──────────────────────────────────────────
-const VARS = ["{{firstName}}","{{lastName}}","{{email}}","{{company}}","{{phone}}","{{website}}","{{jobTitle}}","{{city}}","{{custom1}}","{{custom2}}"];
-
-// ── Dashboard ──────────────────────────────────────────
-function Dashboard() {
-  const [stats, setStats] = useState(null);
-  useEffect(() => {
-    Promise.all([req("/api/campaigns").catch(()=>[]), req("/api/leads").catch(()=>[]), req("/api/accounts").catch(()=>[])]).then(([c,l,a]) => {
-      const leads = Array.isArray(l)?l:[];
-      setStats({
-        camps: Array.isArray(c)?c.length:0,
-        active: Array.isArray(c)?c.filter(x=>x.active).length:0,
-        leads: leads.length,
-        sent: leads.filter(x=>["sent","replied"].includes(x.status)).length,
-        replies: leads.filter(x=>x.status==="replied").length,
-        accounts: Array.isArray(a)?a.length:0,
-        accs: Array.isArray(a)?a:[],
-      });
-    });
-  }, []);
-  const rate = stats&&stats.sent>0 ? ((stats.replies/stats.sent)*100).toFixed(1) : "0.0";
-  return (
-    <div className="page-wrap">
-      <div className="page-head">
-        <div><div className="page-title">Dashboard</div><div className="page-sub">Your outreach overview</div></div>
-      </div>
-      <div className="analytics-grid" style={{marginBottom:20}}>
-        {[
-          {label:"Campaigns", val:stats?stats.camps:"—", sub:`${stats?stats.active:"—"} active`},
-          {label:"Total Leads", val:stats?stats.leads:"—", sub:"all campaigns"},
-          {label:"Emails Sent", val:stats?stats.sent:"—", sub:"all time"},
-          {label:"Replies", val:stats?stats.replies:"—", sub:`${rate}% rate`},
-          {label:"Accounts", val:stats?stats.accounts:"—", sub:"connected"},
-        ].map(s => (
-          <div className="a-stat" key={s.label}>
-            <div className="a-stat-val">{s.val}</div>
-            <div className="a-stat-label">{s.label}</div>
-            <div className="a-stat-sub">{s.sub}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-        <div style={{background:"#0f0f11",border:"1px solid #18181b",borderRadius:10,padding:18}}>
-          <div className="sm semi mb3" style={{color:"#a1a1aa"}}>⚡ System</div>
-          {[["Railway Backend","Live",true],["Supabase DB","Connected",true],["Scheduler","9 AM IST",true],["Accounts",stats?`${stats.accounts} linked`:"-",stats&&stats.accounts>0]].map(([l,v,ok])=>(
-            <div key={l} className="flex ic jb" style={{padding:"8px 0",borderBottom:"1px solid #18181b"}}>
-              <span className="xs muted">{l}</span>
-              <span className="xs semi" style={{color:ok?"#4ade80":"#52525b"}}>{v}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{background:"#0f0f11",border:"1px solid #18181b",borderRadius:10,padding:18}}>
-          <div className="sm semi mb3" style={{color:"#a1a1aa"}}>📧 Gmail Usage Today</div>
-          {!stats||stats.accs.length===0 ? <div className="xs muted">No accounts connected</div> :
-          stats.accs.map(a => {
-            const pct = Math.min(100,((a.sent_today||0)/(a.daily_limit||15))*100);
-            return <div key={a.id} className="mb3">
-              <div className="flex jb mb1"><span className="xs" style={{color:"#e4e4e7"}}>{a.email}</span><span className="xs muted">{a.sent_today||0}/{a.daily_limit||15}</span></div>
-              <div className="acc-bar"><div className={`acc-fill ${pct>80?"warn":""} ${pct>=100?"over":""}`} style={{width:`${pct}%`}}></div></div>
-            </div>;
-          })}
-        </div>
-      </div>
+async function loadDashboard(){
+  document.getElementById("pageTitle").textContent="Dashboard";
+  document.getElementById("newBtn").style.display="none";
+  const [c,l,a]=await Promise.all([api("/api/campaigns").catch(()=>[]),api("/api/leads").catch(()=>[]),api("/api/accounts").catch(()=>[])]);
+  campaigns=c||[];leads=l||[];accounts=a||[];
+  const sent=leads.filter(x=>["sent","replied"].includes(x.status)).length;
+  const replied=leads.filter(x=>x.status==="replied").length;
+  document.getElementById("content").innerHTML=`
+    <div class="grid">
+      <div class="stat-card"><div class="stat-value">${campaigns.length}</div><div class="stat-label">Campaigns</div></div>
+      <div class="stat-card"><div class="stat-value">${leads.length}</div><div class="stat-label">Total Leads</div></div>
+      <div class="stat-card"><div class="stat-value">${sent}</div><div class="stat-label">Emails Sent</div></div>
+      <div class="stat-card"><div class="stat-value">${replied}</div><div class="stat-label">Replies</div></div>
+      <div class="stat-card"><div class="stat-value">${accounts.length}</div><div class="stat-label">Accounts</div></div>
     </div>
-  );
-}
-
-// ── Create Campaign Modal ──────────────────────────────
-function CreateCampModal({onClose, onCreated, toast}) {
-  const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
-  async function go() {
-    if (!name.trim()) return;
-    setSaving(true);
-    try {
-      const camp = await req("/api/campaigns", {method:"POST", body:JSON.stringify({name:name.trim(), steps:[{subject:"",body:"",delay_days:0}]})});
-      onCreated(camp);
-    } catch(e) { toast(e.message,"err"); setSaving(false); }
-  }
-  return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal-box" style={{maxWidth:400}}>
-        <div className="modal-head"><div className="modal-title">✨ New Campaign</div><button className="btn btn-g btn-sm" onClick={onClose}>✕</button></div>
-        <div className="modal-body">
-          <div className="form-group">
-            <label className="form-label">Campaign Name</label>
-            <input className="form-input" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Web Design Outreach — US Q3" autoFocus onKeyDown={e=>e.key==="Enter"&&go()} />
-          </div>
-          <div className="hint">You'll set up leads, email sequence, and schedule after creating.</div>
-        </div>
-        <div className="modal-foot">
-          <button className="btn btn-g" onClick={onClose}>Cancel</button>
-          <button className="btn btn-v" onClick={go} disabled={saving||!name.trim()}>{saving?"Creating...":"Create Campaign →"}</button>
-        </div>
-      </div>
+    <div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:20px">
+      <h3 style="margin-bottom:16px">📧 Gmail Accounts</h3>
+      ${accounts.length===0?"<p style='color:#666'>No accounts connected</p>":accounts.map(a=>`
+        <div style="padding:12px;border-bottom:1px solid #222"><strong>${a.email}</strong> • ${a.sent_today||0}/${a.daily_limit||15} sent today</div>
+      `).join("")}
     </div>
-  );
+  `;
 }
 
-// ── CSV Import Modal ───────────────────────────────────
-function CSVModal({campaignId, onClose, onDone, toast}) {
-  const [drag, setDrag] = useState(false);
-  const [rows, setRows] = useState([]);
-  const [err, setErr] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [prog, setProg] = useState(0);
-  const [tab, setTab] = useState("csv");
-  const [manual, setManual] = useState({email:"",firstName:"",lastName:"",company:"",phone:"",website:"",jobTitle:"",city:""});
-  const ref = useRef();
-
-  function parse(txt) {
-    setErr(""); setRows([]);
-    const lines = txt.replace(/\r/g,"").trim().split("\n").filter(l=>l.trim());
-    if (lines.length < 2) { setErr("CSV needs a header row and at least one data row"); return; }
-    const hdrs = lines[0].split(",").map(h=>h.trim().replace(/^"|"$/g,"").toLowerCase());
-    const col = (...keys) => { for (const k of keys) { const i=hdrs.indexOf(k); if(i!==-1) return i; } return -1; };
-    const ei=col("email"), fi=col("firstname","first_name","first","name"), li=col("lastname","last_name","last");
-    const ci=col("company","organization","org"), pi=col("phone","phonenumber"), wi=col("website","url");
-    const jti=col("jobtitle","job_title","title","position"), cti=col("city","location");
-    if (ei===-1) { setErr("No 'email' column found. Your CSV must have an 'email' header."); return; }
-    const parsed = lines.slice(1).map(line => {
-      const v = line.split(",").map(x=>x.trim().replace(/^"|"$/g,""));
-      return {email:v[ei]||"",firstName:fi!==-1?v[fi]||"":"",lastName:li!==-1?v[li]||"":"",company:ci!==-1?v[ci]||"":"",phone:pi!==-1?v[pi]||"":"",website:wi!==-1?v[wi]||"":"",jobTitle:jti!==-1?v[jti]||"":"",city:cti!==-1?v[cti]||":""};
-    }).filter(r=>r.email&&r.email.includes("@"));
-    if (!parsed.length) { setErr("No valid email addresses found."); return; }
-    setRows(parsed);
-  }
-
-  async function importAll() {
-    setSaving(true); let done=0;
-    for (const r of rows) {
-      try { await req("/api/leads",{method:"POST",body:JSON.stringify({campaign_id:campaignId,first_name:r.firstName,last_name:r.lastName,email:r.email,company:r.company,phone:r.phone,website:r.website,job_title:r.jobTitle,city:r.city})}); } catch {}
-      done++; setProg(Math.round((done/rows.length)*100));
-    }
-    setSaving(false); onDone(done);
-  }
-
-  async function addManual() {
-    if (!manual.email||!manual.email.includes("@")) { setErr("Valid email required"); return; }
-    setSaving(true);
-    try { await req("/api/leads",{method:"POST",body:JSON.stringify({campaign_id:campaignId,first_name:manual.firstName,last_name:manual.lastName,email:manual.email,company:manual.company,phone:manual.phone,website:manual.website,job_title:manual.jobTitle,city:manual.city})}); onDone(1); }
-    catch(e) { setErr(e.message); setSaving(false); }
-  }
-
-  return (
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal-box">
-        <div className="modal-head"><div className="modal-title">➕ Add Leads</div><button className="btn btn-g btn-sm" onClick={onClose}>✕</button></div>
-        <div className="modal-body">
-          <div style={{display:"flex",gap:4,background:"#0a0a0d",border:"1px solid #18181b",borderRadius:8,padding:3,marginBottom:16}}>
-            {[["csv","📂 CSV Upload"],["manual","✍️ Manual"]].map(([v,l])=>(
-              <div key={v} onClick={()=>{setTab(v);setErr("");}} style={{flex:1,textAlign:"center",padding:"7px 12px",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:500,transition:"all 0.12s",background:tab===v?"#1c1c1f":"transparent",color:tab===v?"#e4e4e7":"#52525b"}}>{l}</div>
-            ))}
-          </div>
-          {err && <div className="alert al-err"><span className="alert-icon">⚠</span>{err}</div>}
-          {tab==="csv" ? <>
-            <div className={`drop-zone ${drag?"drag":""}`}
-              onDragOver={e=>{e.preventDefault();setDrag(true)}}
-              onDragLeave={()=>setDrag(false)}
-              onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=x=>parse(x.target.result);r.readAsText(f);}}}
-              onClick={()=>ref.current.click()}>
-              <input ref={ref} type="file" accept=".csv,.txt" onChange={e=>{const f=e.target.files[0];if(f){const r=new FileReader();r.onload=x=>parse(x.target.result);r.readAsText(f);}}} />
-              {rows.length>0 ?
-                <><div className="drop-icon">✅</div><div className="drop-title" style={{color:"#4ade80"}}>{rows.length} leads ready to import</div><div className="drop-sub">Click to replace file</div></> :
-                <><div className="drop-icon">📂</div><div className="drop-title">Drop CSV file here or click to upload</div><div className="drop-sub">Supports .csv files from Apollo, Hunter.io, LinkedIn</div><div className="drop-hint">Required: <code>email</code> &nbsp;|&nbsp; Optional: <code>firstName, lastName, company, phone, website, jobTitle, city</code></div></>
-              }
-            </div>
-            {rows.length>0 && <div style={{marginTop:12,background:"#0a0a0d",border:"1px solid #18181b",borderRadius:8,overflow:"hidden"}}>
-              <div style={{padding:"8px 14px",borderBottom:"1px solid #18181b",fontSize:11,color:"#52525b",textTransform:"uppercase",letterSpacing:"0.4px"}}>Preview</div>
-              <div className="tbl-wrap" style={{border:"none"}}>
-                <table style={{minWidth:"auto"}}>
-                  <thead><tr><th>Email</th><th>Name</th><th>Company</th></tr></thead>
-                  <tbody>{rows.slice(0,3).map((r,i)=><tr key={i}><td className="pri" style={{fontSize:12}}>{r.email}</td><td style={{fontSize:12}}>{r.firstName} {r.lastName}</td><td style={{fontSize:12}}>{r.company||"—"}</td></tr>)}</tbody>
-                </table>
-              </div>
-              {saving && <div className="prog-bar" style={{margin:"0 14px 12px",borderRadius:2}}><div className="prog-fill" style={{width:`${prog}%`}}></div></div>}
-            </div>}
-          </> : <>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">First Name</label><input className="form-input" value={manual.firstName} onChange={e=>setManual(p=>({...p,firstName:e.target.value}))} placeholder="John"/></div>
-              <div className="form-group"><label className="form-label">Last Name</label><input className="form-input" value={manual.lastName} onChange={e=>setManual(p=>({...p,lastName:e.target.value}))} placeholder="Smith"/></div>
-            </div>
-            <div className="form-group"><label className="form-label">Email *</label><input className="form-input" value={manual.email} onChange={e=>setManual(p=>({...p,email:e.target.value}))} placeholder="john@company.com" type="email"/></div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Company</label><input className="form-input" value={manual.company} onChange={e=>setManual(p=>({...p,company:e.target.value}))} placeholder="Acme Inc"/></div>
-              <div className="form-group"><label className="form-label">Job Title</label><input className="form-input" value={manual.jobTitle} onChange={e=>setManual(p=>({...p,jobTitle:e.target.value}))} placeholder="CEO"/></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={manual.phone} onChange={e=>setManual(p=>({...p,phone:e.target.value}))} placeholder="+1 555 000 0000"/></div>
-              <div className="form-group"><label className="form-label">Website</label><input className="form-input" value={manual.website} onChange={e=>setManual(p=>({...p,website:e.target.value}))} placeholder="acme.com"/></div>
-            </div>
-            <div className="form-group"><label className="form-label">City</label><input className="form-input" value={manual.city} onChange={e=>setManual(p=>({...p,city:e.target.value}))} placeholder="New York"/></div>
-          </>}
-        </div>
-        <div className="modal-foot">
-          <button className="btn btn-g" onClick={onClose}>Cancel</button>
-          {tab==="csv"
-            ? <button className="btn btn-v" onClick={importAll} disabled={saving||rows.length===0}>{saving?`Importing ${prog}%...`:`Import ${rows.length} Leads`}</button>
-            : <button className="btn btn-v" onClick={addManual} disabled={saving||!manual.email}>{saving?"Adding...":"Add Lead"}</button>}
-        </div>
-      </div>
+async function loadCampaigns(){
+  document.getElementById("pageTitle").textContent="Campaigns";
+  document.getElementById("newBtn").style.display="block";
+  document.getElementById("newBtn").onclick=()=>openNewModal();
+  if(!campaigns.length)campaigns=await api("/api/campaigns")||[];
+  document.getElementById("content").innerHTML=campaigns.length===0?`<div class="empty">📋 No campaigns yet<br><button class="btn" onclick="openNewModal()">+ Create Campaign</button></div>`:`
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Steps</th><th>Leads</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>${campaigns.map(c=>`<tr><td>${c.name}</td><td>${(c.steps||[]).length}</td><td>${c.lead_count||0}</td><td><span class="badge ${c.active?"badge-green":"badge-gray"}">${c.active?"Active":"Paused"}</span></td><td><button class="btn btn-secondary" onclick="editCampaign(${c.id})">Edit</button></td></tr>`).join("")}</tbody>
+      </table>
     </div>
-  );
+  `;
 }
 
-// ── Campaign Detail ────────────────────────────────────
-function CampDetail({camp, onBack, toast, onUpdate}) {
-  const [tab, setTab] = useState("leads");
-  const [leads, setLeads] = useState([]);
-  const [loadingLeads, setLoadingLeads] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [showCSV, setShowCSV] = useState(false);
-  const [steps, setSteps] = useState(camp.steps?.length ? camp.steps : [{subject:"",body:"",delay_days:0}]);
-  const [activeStep, setActiveStep] = useState(0);
-  const [schedule, setSchedule] = useState(camp.schedule || {days:[1,2,3,4,5],startTime:"09:00",endTime:"17:00",tz:"Asia/Kolkata"});
-  const [savingSeq, setSavingSeq] = useState(false);
-  const [savingSched, setSavingSched] = useState(false);
-  const [active, setActive] = useState(camp.active||false);
-  const [reviewLead, setReviewLead] = useState({firstName:"John",lastName:"Smith",company:"Acme Inc",phone:"+1 555 0000",website:"acme.com",jobTitle:"CEO",city:"New York",email:"john@acme.com",custom1:"Your custom text",custom2:"Another value"});
-  const editorRef = useRef();
+async function loadAccounts(){
+  document.getElementById("pageTitle").textContent="Email Accounts";
+  document.getElementById("newBtn").style.display="block";
+  document.getElementById("newBtn").onclick=()=>{modalType="account";openModal("Add Gmail Account","<div class='form-group'><label>Email</label><input id='accEmail' placeholder='you@gmail.com' type='email'/></div><div class='form-group'><label>App Password</label><input id='accPass' placeholder='16-char password' type='password'/></div><div class='form-group'><label>Daily Limit</label><input id='accLimit' value='15' type='number' min='1' max='50'/></div>")};
+  if(!accounts.length)accounts=await api("/api/accounts")||[];
+  document.getElementById("content").innerHTML=accounts.length===0?`<div class="empty">📭 No accounts<br><button class="btn" onclick="document.querySelector('[onclick*=accEmail]')?.click()">+ Add Account</button></div>`:`<div>${accounts.map(a=>{const pct=Math.min(100,((a.sent_today||0)/(a.daily_limit||15))*100);return `<div style="background:#1a1a1a;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:12px"><strong>${a.email}</strong><div style="font-size:12px;color:#888;margin:8px 0">${a.sent_today||0}/${a.daily_limit||15} sent today (${pct.toFixed(0)}%)</div></div>`;}).join("")}</div>`;
+}
 
-  const loadLeads = useCallback(async () => {
-    setLoadingLeads(true);
-    try { const d = await req(`/api/leads?campaign_id=${camp.id}`); setLeads(Array.isArray(d)?d:[]); } catch { setLeads([]); }
-    setLoadingLeads(false);
-  }, [camp.id]);
-
-  useEffect(() => { loadLeads(); }, []);
-
-  async function toggleActive() {
-    try {
-      await req(`/api/campaigns/${camp.id}`, {method:"PUT", body:JSON.stringify({...camp, active:!active, steps, schedule})});
-      setActive(a=>!a); toast(`Campaign ${!active?"activated":"paused"}`);
-    } catch(e) { toast(e.message,"err"); }
-  }
-
-  async function saveSequence() {
-    if (steps.some(s=>!s.subject.trim())) { toast("All steps need a subject line","err"); return; }
-    setSavingSeq(true);
-    try { await req(`/api/campaigns/${camp.id}`, {method:"PUT", body:JSON.stringify({...camp, steps, schedule, active})}); toast("Sequence saved ✓"); }
-    catch(e) { toast(e.message,"err"); }
-    setSavingSeq(false);
-  }
-
-  async function saveSchedule() {
-    setSavingSched(true);
-    try { await req(`/api/campaigns/${camp.id}`, {method:"PUT", body:JSON.stringify({...camp, steps, schedule, active})}); toast("Schedule saved ✓"); }
-    catch(e) { toast(e.message,"err"); }
-    setSavingSched(false);
-  }
-
-  const updateStep = (i, field, val) => setSteps(s => { const n=[...s]; n[i]={...n[i],[field]:val}; return n; });
-  const addStep = () => { setSteps(s=>[...s,{subject:"Re: "+steps[0].subject,body:"",delay_days:2}]); setActiveStep(steps.length); };
-  const removeStep = i => { setSteps(s=>s.filter((_,idx)=>idx!==i)); setActiveStep(Math.max(0,i-1)); };
-
-  function insertVar(v) {
-    const el = editorRef.current;
-    if (!el) { updateStep(activeStep,"body",steps[activeStep].body+v); return; }
-    const s=el.selectionStart, e=el.selectionEnd, val=steps[activeStep].body;
-    const newVal = val.slice(0,s)+v+val.slice(e);
-    updateStep(activeStep,"body",newVal);
-    setTimeout(()=>{el.focus();el.selectionStart=el.selectionEnd=s+v.length;},0);
-  }
-
-  function previewBody(body) {
-    return body.replace(/\{\{(\w+)\}\}/g, (m,k) => {
-      const map = {firstName:reviewLead.firstName,lastName:reviewLead.lastName,email:reviewLead.email,company:reviewLead.company,phone:reviewLead.phone,website:reviewLead.website,jobTitle:reviewLead.jobTitle,city:reviewLead.city,custom1:reviewLead.custom1,custom2:reviewLead.custom2};
-      return map[k]||m;
-    });
-  }
-
-  async function markReplied(id) {
-    try { await req(`/api/leads/${id}`,{method:"PUT",body:JSON.stringify({status:"replied"})}); toast("Marked as replied ✓"); loadLeads(); } catch(e) { toast(e.message,"err"); }
-  }
-  async function removeLead(id) {
-    try { await req(`/api/leads/${id}`,{method:"DELETE"}); toast("Lead removed"); loadLeads(); } catch(e) { toast(e.message,"err"); }
-  }
-
-  const filtered = leads.filter(l => {
-    if (filter!=="all"&&l.status!==filter) return false;
-    if (search&&!`${l.first_name} ${l.last_name} ${l.email} ${l.company}`.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const counts = {all:leads.length,queued:leads.filter(l=>!l.status||l.status==="queued").length,sent:leads.filter(l=>l.status==="sent").length,replied:leads.filter(l=>l.status==="replied").length,bounced:leads.filter(l=>l.status==="bounced").length};
-  const statusBadge = s => {const m={queued:["bz","Queued"],sent:["bv","Sent"],replied:["bg","Replied"],bounced:["br","Bounced"],skipped:["by","Skipped"]};const[c,l]=m[s]||["bz","Queued"];return <span className={`badge ${c}`}>{l}</span>;};
-  const DAYS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-  const toggleDay = d => setSchedule(p=>({...p,days:p.days.includes(d)?p.days.filter(x=>x!==d):[...p.days,d].sort()}));
-
-  const TABS = [["leads","👥 Leads"],["sequences","✉️ Sequences"],["schedule","🕐 Schedule"],["analytics","📊 Analytics"],["review","👁 Review"]];
-
-  return (
-    <div className="camp-detail">
-      <div className="camp-topbar">
-        <button className="camp-back" onClick={onBack}>← Campaigns</button>
-        <div className="camp-topbar-name">{camp.name}</div>
-        <div className="camp-status-toggle" onClick={toggleActive}>
-          <div className={`dot ${active?"":"off"}`}></div>
-          <span style={{fontSize:12,fontWeight:600,color:"#a1a1aa"}}>{active?"Active":"Paused"}</span>
-        </div>
-      </div>
-
-      <div className="camp-tabs">
-        {TABS.map(([v,l])=>(
-          <div key={v} className={`camp-tab ${tab===v?"on":""}`} onClick={()=>setTab(v)}>{l}</div>
-        ))}
-      </div>
-
-      <div className="camp-body">
-        {/* ── LEADS ── */}
-        {tab==="leads" && <>
-          {showCSV && <CSVModal campaignId={camp.id} onClose={()=>setShowCSV(false)} toast={toast} onDone={n=>{setShowCSV(false);loadLeads();toast(`${n} lead${n!==1?"s":""} added!`);}} />}
-          <div className="leads-toolbar">
-            <div className="search-box">
-              <span className="search-box-icon">🔍</span>
-              <input className="form-input" style={{paddingLeft:34}} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search leads..." />
-            </div>
-            <select className="filter-select" value={filter} onChange={e=>setFilter(e.target.value)}>
-              {Object.entries(counts).map(([k,v])=><option key={k} value={k}>{k.charAt(0).toUpperCase()+k.slice(1)} ({v})</option>)}
-            </select>
-            <button className="btn btn-v" onClick={()=>setShowCSV(true)}>+ Add Leads</button>
-          </div>
-          <div className="tbl-wrap">
-            {loadingLeads ? <div style={{padding:32,textAlign:"center",color:"#52525b"}}>Loading leads...</div> :
-            filtered.length===0 ? <div className="tbl-empty"><div className="tbl-empty-icon">👥</div><div className="tbl-empty-text">{leads.length===0?"No leads yet — add your first leads":"No leads match this filter"}</div><div className="tbl-empty-sub">{leads.length===0?"Upload a CSV or add manually":""}</div>{leads.length===0&&<button className="btn btn-v" onClick={()=>setShowCSV(true)}>+ Add Leads</button>}</div> :
-            <table>
-              <thead><tr><th>Email</th><th>First Name</th><th>Last Name</th><th>Company</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>{filtered.map(l=>(
-                <tr key={l.id}>
-                  <td style={{color:"#818cf8"}}>{l.email}</td>
-                  <td className="pri">{l.first_name||"—"}</td>
-                  <td>{l.last_name||"—"}</td>
-                  <td>{l.company||"—"}</td>
-                  <td>{l.phone||"—"}</td>
-                  <td>{statusBadge(l.status)}</td>
-                  <td><div className="flex gap2">{l.status!=="replied"&&<button className="btn btn-ok btn-xs" onClick={()=>markReplied(l.id)}>✓ Replied</button>}<button className="btn btn-r btn-xs" onClick={()=>removeLead(l.id)}>🗑</button></div></td>
-                </tr>
-              ))}</tbody>
-            </table>}
-          </div>
-        </>}
-
-        {/* ── SEQUENCES ── */}
-        {tab==="sequences" && <>
-          <div className="alert al-info mb3"><span className="alert-icon">💡</span>Click a variable below the editor to insert it into your email. Each lead's real data will replace it when sent.</div>
-          <div className="seq-wrap">
-            <div className="seq-steps">
-              {steps.map((s,i)=>(
-                <div key={i} className={`seq-step-btn ${activeStep===i?"on":""}`} onClick={()=>setActiveStep(i)}>
-                  <div className="seq-step-num">{i+1}</div>
-                  <div className="seq-step-info">
-                    <div className="seq-step-title">{s.subject||`Step ${i+1}`}</div>
-                    <div className="seq-step-delay">{i===0?"Initial email":`Day +${s.delay_days}`}</div>
-                  </div>
-                  {steps.length>1&&<button style={{background:"transparent",border:"none",color:"#3f3f46",cursor:"pointer",fontSize:14,padding:"2px 4px"}} onClick={e=>{e.stopPropagation();removeStep(i);}}>✕</button>}
-                </div>
-              ))}
-              <div className="seq-add-btn" onClick={addStep}>+ Add Step</div>
-            </div>
-            <div className="seq-editor">
-              <div className="seq-editor-card">
-                <div className="seq-editor-head">
-                  <div className="seq-editor-label">Step {activeStep+1} — {activeStep===0?"Initial Email":"Follow-up"}</div>
-                  {activeStep>0&&<div className="delay-row">
-                    <span>Send after</span>
-                    <input type="number" min="1" max="30" className="editor-input" style={{width:56,padding:"5px 8px",textAlign:"center"}} value={steps[activeStep].delay_days} onChange={e=>updateStep(activeStep,"delay_days",+e.target.value)} />
-                    <span>days</span>
-                  </div>}
-                </div>
-                <div className="seq-editor-body">
-                  <div className="vars-bar">
-                    <div className="xs muted" style={{alignSelf:"center",marginRight:4}}>Variables:</div>
-                    {VARS.map(v=><span key={v} className="var-chip" onClick={()=>insertVar(v)}>{v}</span>)}
-                  </div>
-                  <div className="editor-field">
-                    <div className="editor-label">Subject Line</div>
-                    <input className="editor-input" value={steps[activeStep].subject} onChange={e=>updateStep(activeStep,"subject",e.target.value)} placeholder={activeStep===0?"Quick question for {{firstName}} at {{company}}":"Re: Quick question"} />
-                  </div>
-                  <div className="editor-field">
-                    <div className="editor-label">Email Body</div>
-                    <textarea ref={editorRef} className="editor-textarea" value={steps[activeStep].body}
-                      onChange={e=>updateStep(activeStep,"body",e.target.value)}
-                      placeholder={activeStep===0?`Hi {{firstName}},\n\nI noticed {{company}}'s website and thought there's a real opportunity to improve conversions.\n\nI help businesses like yours get more leads from their existing traffic — would a quick 15-min call make sense this week?\n\nBest,\nMohammed\nColdReach`:`Hi {{firstName}},\n\nJust following up on my last email — did you get a chance to check it out?\n\nHappy to keep it quick. Let me know if you're open to a call.\n\nBest,\nMohammed`}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div style={{marginTop:12,display:"flex",justifyContent:"flex-end"}}>
-                <button className="btn btn-v" onClick={saveSequence} disabled={savingSeq}>{savingSeq?"Saving...":"💾 Save Sequence"}</button>
-              </div>
-            </div>
-          </div>
-        </>}
-
-        {/* ── SCHEDULE ── */}
-        {tab==="schedule" && <>
-          <div className="schedule-card">
-            <div className="schedule-title">📅 Send Days</div>
-            <div className="days-row">{DAYS.map((d,i)=><button key={i} className={`day-btn ${schedule.days.includes(i)?"on":""}`} onClick={()=>toggleDay(i)}>{d}</button>)}</div>
-            <div className="hint mt2">Emails will only be sent on selected days.</div>
-          </div>
-          <div className="schedule-card">
-            <div className="schedule-title">🕐 Send Window</div>
-            <div className="time-row">
-              <input type="time" value={schedule.startTime} onChange={e=>setSchedule(p=>({...p,startTime:e.target.value}))} />
-              <span className="time-sep">to</span>
-              <input type="time" value={schedule.endTime} onChange={e=>setSchedule(p=>({...p,endTime:e.target.value}))} />
-            </div>
-            <div className="hint mt2">Emails will be sent between these hours (note: backend currently sends at 9 AM IST daily — this is saved for future use).</div>
-          </div>
-          <div className="schedule-card">
-            <div className="schedule-title">🌍 Timezone</div>
-            <select className="tz-select" value={schedule.tz} onChange={e=>setSchedule(p=>({...p,tz:e.target.value}))}>
-              {["Asia/Kolkata","America/New_York","America/Chicago","America/Denver","America/Los_Angeles","Europe/London","Europe/Berlin","Asia/Dubai","Asia/Singapore"].map(t=><option key={t} value={t}>{t.replace("_"," ")}</option>)}
-            </select>
-          </div>
-          <button className="btn btn-v" onClick={saveSchedule} disabled={savingSched}>{savingSched?"Saving...":"💾 Save Schedule"}</button>
-        </>}
-
-        {/* ── ANALYTICS ── */}
-        {tab==="analytics" && <>
-          <div className="analytics-grid">
-            {[
-              {label:"Total Leads",val:leads.length},
-              {label:"Queued",val:leads.filter(l=>!l.status||l.status==="queued").length},
-              {label:"Sent",val:leads.filter(l=>["sent","replied"].includes(l.status)).length},
-              {label:"Replies",val:leads.filter(l=>l.status==="replied").length},
-              {label:"Reply Rate",val:leads.length>0?`${((leads.filter(l=>l.status==="replied").length/Math.max(1,leads.filter(l=>["sent","replied"].includes(l.status)).length))*100).toFixed(1)}%`:"0%"},
-            ].map(s=>(
-              <div className="a-stat" key={s.label}>
-                <div className="a-stat-val">{s.val}</div>
-                <div className="a-stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{background:"#0f0f11",border:"1px solid #18181b",borderRadius:10,padding:20}}>
-            <div className="sm semi mb3" style={{color:"#a1a1aa"}}>Lead Status Breakdown</div>
-            {[["Queued","#52525b",leads.filter(l=>!l.status||l.status==="queued").length],["Sent","#6366f1",leads.filter(l=>l.status==="sent").length],["Replied","#22c55e",leads.filter(l=>l.status==="replied").length],["Bounced","#ef4444",leads.filter(l=>l.status==="bounced").length]].map(([l,c,v])=>(
-              <div key={l} style={{marginBottom:12}}>
-                <div className="flex jb mb1"><span className="xs" style={{color:"#a1a1aa"}}>{l}</span><span className="xs semi" style={{color:c}}>{v} leads</span></div>
-                <div className="prog-bar" style={{height:6}}><div className="prog-fill" style={{width:leads.length?`${(v/leads.length)*100}%`:"0%",background:c}}></div></div>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {/* ── REVIEW ── */}
-        {tab==="review" && <>
-          <div style={{background:"#0f0f11",border:"1px solid #18181b",borderRadius:10,padding:18,marginBottom:16}}>
-            <div className="sm semi mb3" style={{color:"#a1a1aa"}}>🧪 Preview With Sample Lead Data</div>
-            <div className="form-row" style={{marginBottom:10}}>
-              <div><label className="form-label">First Name</label><input className="form-input" value={reviewLead.firstName} onChange={e=>setReviewLead(p=>({...p,firstName:e.target.value}))} /></div>
-              <div><label className="form-label">Last Name</label><input className="form-input" value={reviewLead.lastName} onChange={e=>setReviewLead(p=>({...p,lastName:e.target.value}))} /></div>
-            </div>
-            <div className="form-row">
-              <div><label className="form-label">Company</label><input className="form-input" value={reviewLead.company} onChange={e=>setReviewLead(p=>({...p,company:e.target.value}))} /></div>
-              <div><label className="form-label">Website</label><input className="form-input" value={reviewLead.website} onChange={e=>setReviewLead(p=>({...p,website:e.target.value}))} /></div>
-            </div>
-          </div>
-          {steps.map((s,i)=>(
-            <div className="review-card" key={i}>
-              <div className="review-head">
-                <div><div className="review-step-label">Step {i+1} {i>0?`• Day +${s.delay_days}`:""}</div><div className="review-subject">Subject: {previewBody(s.subject)||<span style={{color:"#3f3f46"}}>No subject set</span>}</div></div>
-              </div>
-              <div className="review-body-wrap">{previewBody(s.body)||<span style={{color:"#3f3f46"}}>No body set</span>}</div>
-            </div>
-          ))}
-        </>}
-      </div>
+async function loadLeads(){
+  document.getElementById("pageTitle").textContent="Leads";
+  document.getElementById("newBtn").style.display="none";
+  if(!leads.length)leads=await api("/api/leads")||[];
+  document.getElementById("content").innerHTML=leads.length===0?`<div class="empty">👥 No leads</div>`:`
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th></tr></thead>
+        <tbody>${leads.map(l=>`<tr><td>${l.email}</td><td>${l.first_name} ${l.last_name}</td><td>${l.company||"-"}</td><td><span class="badge badge-blue">${l.status||"Queued"}</span></td></tr>`).join("")}</tbody>
+      </table>
     </div>
-  );
+  `;
 }
 
-// ── Campaigns List ─────────────────────────────────────
-function CampaignsList({onOpen, toast}) {
-  const [camps, setCamps] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+function openModal(title,body){
+  document.getElementById("modalTitle").textContent=title;
+  document.getElementById("modalBody").innerHTML=body;
+  document.getElementById("modal").classList.add("show");
+}
 
-  const load = useCallback(async () => {
-    try { const d = await req("/api/campaigns"); setCamps(Array.isArray(d)?d:[]); } catch(e) { toast(e.message,"err"); }
-    setLoading(false);
-  }, []);
+function closeModal(){
+  document.getElementById("modal").classList.remove("show");
+  modalType="";
+}
 
-  useEffect(() => { load(); }, []);
-
-  async function deleteCamp(c, e) {
-    e.stopPropagation();
-    if (!confirm(`Delete "${c.name}"?`)) return;
-    try { await req(`/api/campaigns/${c.id}`,{method:"DELETE"}); toast("Deleted"); load(); } catch(e) { toast(e.message,"err"); }
+async function modalSave(){
+  if(modalType==="campaign"){
+    const name=document.getElementById("campName")?.value;
+    if(!name){alert("Name required");return}
+    const res=await api("/api/campaigns",{method:"POST",body:JSON.stringify({name,steps:[{subject:"",body:"",delay_days:0}]})});
+    if(res){alert("Campaign created!");closeModal();loadCampaigns()}
   }
-
-  return (
-    <div className="page-wrap">
-      <div className="page-head">
-        <div><div className="page-title">Campaigns</div><div className="page-sub">{camps.length} campaigns</div></div>
-        <button className="btn btn-v" onClick={()=>setShowCreate(true)}>+ New Campaign</button>
-      </div>
-      {showCreate && <CreateCampModal onClose={()=>setShowCreate(false)} toast={toast} onCreated={c=>{setShowCreate(false);onOpen(c);}} />}
-      {loading ? <div style={{color:"#52525b",fontSize:13}}>Loading...</div> :
-      camps.length===0 ? (
-        <div className="empty-box">
-          <div className="empty-icon">📋</div>
-          <div className="empty-title">No campaigns yet</div>
-          <div className="empty-sub">Create your first campaign to start cold outreach</div>
-          <button className="btn btn-v" onClick={()=>setShowCreate(true)}>+ Create Campaign</button>
-        </div>
-      ) : (
-        <div className="camp-grid">
-          {camps.map(c=>(
-            <div className="camp-row" key={c.id} onClick={()=>onOpen(c)}>
-              <div className={`camp-row-dot ${c.active?"":"off"}`}></div>
-              <div className="camp-row-name">{c.name}</div>
-              <div className="camp-row-meta">
-                <div className="camp-stat"><div className="camp-stat-val">{(c.steps||[]).length}</div><div className="camp-stat-label">Steps</div></div>
-                <div className="camp-stat"><div className="camp-stat-val">{c.lead_count||0}</div><div className="camp-stat-label">Leads</div></div>
-                <div className="camp-stat"><div className="camp-stat-val">{c.sent_count||0}</div><div className="camp-stat-label">Sent</div></div>
-                <span className={`badge ${c.active?"bg":"bz"}`}>{c.active?"Active":"Paused"}</span>
-              </div>
-              <div className="camp-row-actions" onClick={e=>e.stopPropagation()}>
-                <button className="btn btn-g btn-sm" onClick={()=>onOpen(c)}>Open</button>
-                <button className="btn btn-r btn-sm" onClick={e=>deleteCamp(c,e)}>🗑</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Accounts ───────────────────────────────────────────
-function Accounts({toast}) {
-  const [accs, setAccs] = useState([]);
-  const [show, setShow] = useState(false);
-  const [f, setF] = useState({email:"",pass:"",limit:15});
-  const [err, setErr] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [showP, setShowP] = useState(false);
-
-  const load = useCallback(async ()=>{try{const d=await req("/api/accounts");setAccs(Array.isArray(d)?d:[]);}catch(e){toast(e.message,"err");}}, []);
-  useEffect(()=>{load();},[]);
-
-  async function add() {
-    if (!f.email||!f.pass) { setErr("Both fields required"); return; }
-    setSaving(true); setErr("");
-    try { await req("/api/accounts",{method:"POST",body:JSON.stringify({email:f.email.trim(),app_password:f.pass.trim(),daily_limit:f.limit})}); toast("Account added"); setShow(false); setF({email:"",pass:"",limit:15}); load(); }
-    catch(e) { setErr(e.message||"Failed"); }
-    setSaving(false);
+  if(modalType==="account"){
+    const email=document.getElementById("accEmail")?.value;
+    const pass=document.getElementById("accPass")?.value;
+    const limit=document.getElementById("accLimit")?.value||15;
+    if(!email||!pass){alert("All fields required");return}
+    const res=await api("/api/accounts",{method:"POST",body:JSON.stringify({email,app_password:pass,daily_limit:+limit})});
+    if(res){alert("Account added!");closeModal();loadAccounts()}
   }
-  async function remove(id){if(!confirm("Remove account?"))return;try{await req(`/api/accounts/${id}`,{method:"DELETE"});toast("Removed");load();}catch(e){toast(e.message,"err");}}
-
-  const totalCap=accs.reduce((s,a)=>s+(a.daily_limit||15),0);
-  const totalSent=accs.reduce((s,a)=>s+(a.sent_today||0),0);
-
-  return (
-    <div className="page-wrap">
-      <div className="page-head">
-        <div><div className="page-title">Email Accounts</div><div className="page-sub">{accs.length} accounts · {totalSent}/{totalCap} sent today</div></div>
-        <button className="btn btn-v" onClick={()=>setShow(true)}>+ Add Account</button>
-      </div>
-      {show&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShow(false)}>
-        <div className="modal-box">
-          <div className="modal-head"><div className="modal-title">📧 Add Gmail Account</div><button className="btn btn-g btn-sm" onClick={()=>setShow(false)}>✕</button></div>
-          <div className="modal-body">
-            {err&&<div className="alert al-err"><span>⚠</span>{err}</div>}
-            <div className="alert al-info"><span>🔑</span><div><strong>Requires Gmail App Password</strong> — not your login password.<br/><span style={{fontSize:11,marginTop:4,display:"block"}}>Google Account → Security → 2-Step Verification → App Passwords → Select Mail → Generate</span></div></div>
-            <div className="form-group"><label className="form-label">Gmail Address</label><input className="form-input" value={f.email} onChange={e=>setF(p=>({...p,email:e.target.value}))} placeholder="you@gmail.com" type="email"/></div>
-            <div className="form-group"><label className="form-label">App Password</label>
-              <div className="flex gap2"><input className="form-input" value={f.pass} onChange={e=>setF(p=>({...p,pass:e.target.value}))} placeholder="xxxx xxxx xxxx xxxx" type={showP?"text":"password"}/><button className="btn btn-g btn-sm" style={{flex:"none"}} onClick={()=>setShowP(p=>!p)}>{showP?"🙈":"👁"}</button></div>
-            </div>
-            <div className="form-group"><label className="form-label">Daily Limit</label><input className="form-input" type="number" min="1" max="50" value={f.limit} onChange={e=>setF(p=>({...p,limit:+e.target.value}))}/><div className="hint">Keep ≤15 for safety. Increase slowly after 4+ weeks of warmup.</div></div>
-          </div>
-          <div className="modal-foot"><button className="btn btn-g" onClick={()=>setShow(false)}>Cancel</button><button className="btn btn-v" onClick={add} disabled={saving}>{saving?"Adding...":"Add Account"}</button></div>
-        </div>
-      </div>}
-      {accs.length===0?<div className="empty-box"><div className="empty-icon">📭</div><div className="empty-title">No accounts connected</div><div className="empty-sub">Add a Gmail account to enable sending</div><button className="btn btn-v" onClick={()=>setShow(true)}>+ Add Gmail Account</button></div>:
-      accs.map(a=>{const pct=Math.min(100,((a.sent_today||0)/(a.daily_limit||15))*100);return(
-        <div className="acc-card" key={a.id}>
-          <div className="flex ic jb">
-            <div><div className="acc-email">{a.email}</div><div className="xs muted mt2">Daily limit: {a.daily_limit||15}</div></div>
-            <div className="flex ic gap3">
-              <div style={{textAlign:"right"}}><div style={{fontSize:20,fontWeight:800,color:pct>80?"#f59e0b":"#818cf8"}}>{a.sent_today||0}/{a.daily_limit||15}</div><div className="xs muted">sent today</div></div>
-              <span className="badge bg">Active</span>
-              <button className="btn btn-r btn-sm" onClick={()=>remove(a.id)}>Remove</button>
-            </div>
-          </div>
-          <div className="acc-bar"><div className={`acc-fill ${pct>80?"warn":""} ${pct>=100?"over":""}`} style={{width:`${pct}%`}}></div></div>
-          <div className="flex jb mt2"><span className="xs muted">{pct.toFixed(0)}% used</span><span className="xs muted">{(a.daily_limit||15)-(a.sent_today||0)} remaining</span></div>
-        </div>);})}
-    </div>
-  );
 }
 
-// ── Replies ────────────────────────────────────────────
-function Replies({toast}) {
-  const [leads, setLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(()=>{req("/api/leads").then(d=>{setLeads(Array.isArray(d)?d.filter(l=>l.status==="replied"):[]);}).catch(()=>{}).finally(()=>setLoading(false));}, []);
-  return (
-    <div className="page-wrap">
-      <div className="page-head"><div><div className="page-title">Replies</div><div className="page-sub">{leads.length} leads replied</div></div></div>
-      <div className="alert al-warn mb3"><span className="alert-icon">📱</span>ColdReach doesn't auto-read replies yet. Check Gmail, then go to the campaign's Leads tab and mark as Replied to stop future follow-ups.</div>
-      <div className="tbl-wrap">
-        {loading?<div style={{padding:32,textAlign:"center",color:"#52525b"}}>Loading...</div>:
-        leads.length===0?<div className="tbl-empty"><div className="tbl-empty-icon">💬</div><div className="tbl-empty-text">No replies tracked yet</div><div className="tbl-empty-sub">Mark leads as replied from Campaigns → Leads</div></div>:
-        <table><thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th></tr></thead>
-        <tbody>{leads.map(l=><tr key={l.id}><td style={{color:"#818cf8"}}>{l.email}</td><td className="pri">{l.first_name} {l.last_name}</td><td>{l.company||"—"}</td><td><span className="badge bg">Replied ✓</span></td></tr>)}</tbody></table>}
-      </div>
-    </div>
-  );
+function openNewModal(){
+  if(currentPage==="campaigns"){
+    modalType="campaign";
+    openModal("New Campaign","<div class='form-group'><label>Campaign Name</label><input id='campName' placeholder='e.g. Web Design Outreach' autofocus/></div>");
+  }
 }
 
-// ── Root App ───────────────────────────────────────────
-function App() {
-  const [page, setPage] = useState("campaigns");
-  const [openCamp, setOpenCamp] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const { list, add: toast, remove } = useToast();
-
-  const NAV = [
-    {id:"dashboard",icon:"📊",label:"Dashboard"},
-    {id:"campaigns",icon:"📋",label:"Campaigns"},
-    {id:"accounts",icon:"📧",label:"Accounts"},
-    {id:"replies",icon:"💬",label:"Replies"},
-  ];
-
-  function go(id) { setPage(id); setOpenCamp(null); setDrawerOpen(false); }
-
-  const SidebarContent = () => (
-    <>
-      <div className="sidebar-logo">
-        <div className="logo-box">❄️</div>
-        <div><div className="logo-name">ColdReach</div><div className="logo-plan">Automation</div></div>
-      </div>
-      <div style={{padding:"8px 4px"}}>
-        <div className="sidebar-section">Main</div>
-        {NAV.map(n=>(
-          <div key={n.id} className={`sidebar-item ${page===n.id&&!openCamp?"on":""}`} onClick={()=>go(n.id)}>
-            <span className="s-icon">{n.icon}</span><span>{n.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="sidebar-bottom">
-        <div style={{fontSize:11,color:"#3f3f46",lineHeight:1.6}}>Scheduler: 9 AM IST daily<br/>Max: 45 emails/day</div>
-      </div>
-    </>
-  );
-
-  const renderPage = () => {
-    if (openCamp) return <CampDetail camp={openCamp} onBack={()=>setOpenCamp(null)} toast={toast} />;
-    if (page==="dashboard") return <Dashboard />;
-    if (page==="campaigns") return <CampaignsList onOpen={c=>{setOpenCamp(c);setPage("campaigns");}} toast={toast} />;
-    if (page==="accounts") return <Accounts toast={toast} />;
-    if (page==="replies") return <Replies toast={toast} />;
-  };
-
-  return (
-    <div className="shell">
-      <div className="sidebar"><SidebarContent /></div>
-
-      <div className="drawer-overlay" style={{display:drawerOpen?"block":"none"}} onClick={()=>setDrawerOpen(false)}></div>
-      <div className={`drawer ${drawerOpen?"open":""}`}><SidebarContent /></div>
-
-      <div className="page">
-        <div className="mob-header">
-          <button className="mob-menu-btn" onClick={()=>setDrawerOpen(true)}>☰</button>
-          <div className="logo-name">{openCamp ? openCamp.name : NAV.find(n=>n.id===page)?.label}</div>
-          <div style={{width:40}}></div>
-        </div>
-        {renderPage()}
-      </div>
-
-      <div className="bot-nav">
-        <div className="bot-nav-row">
-          {NAV.map(n=>(
-            <div key={n.id} className={`bot-item ${page===n.id&&!openCamp?"on":""}`} onClick={()=>go(n.id)}>
-              <div className="bot-icon">{n.icon}</div>
-              <div>{n.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Toasts list={list} remove={remove} />
-    </div>
-  );
+function editCampaign(id){
+  const camp=campaigns.find(c=>c.id===id);
+  if(camp)alert("Full campaign editor coming soon. For now, edit via API or backend.");
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+loadDashboard();
 </script>
 </body>
 </html>
