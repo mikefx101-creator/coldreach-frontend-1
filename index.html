@@ -39,6 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface2);color:var(--text)}
 .btn-danger{background:transparent;color:var(--red);border:1px solid #3d1515}.btn-danger:hover{background:#3d1515;color:var(--red)}
 .btn-green{background:#14532d;color:var(--green);border:1px solid #166534}.btn-green:hover{background:#166534}
+.btn-yellow{background:#2d2000;color:var(--yellow);border:1px solid #3d2f00}.btn-yellow:hover{background:#3d2f00}
 .btn-sm{padding:6px 12px;font-size:12px}
 .btn-icon{padding:5px 8px;font-size:12px;line-height:1}
 
@@ -97,6 +98,11 @@ tr:hover td{background:#0f0f0f}
 .var-chip{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:11px;font-family:monospace;color:var(--muted);cursor:pointer;transition:all 0.15s}
 .var-chip:hover{background:var(--blue);border-color:var(--blue);color:#fff}
 
+/* SCHEDULE BOX */
+.schedule-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px}
+.schedule-box .sched-title{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:14px}
+.schedule-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
 /* DROP ZONE */
 .dropzone{border:2px dashed var(--border);border-radius:10px;padding:36px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg)}
 .dropzone:hover,.dropzone.dragover{border-color:var(--blue);background:#0a0f1a}
@@ -114,13 +120,14 @@ tr:hover td{background:#0f0f0f}
 /* INFO BOX */
 .info-box{background:#0d1425;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#93c5fd;margin-bottom:16px}
 .success-box{background:#052e16;border:1px solid #166534;border-radius:8px;padding:12px;font-size:12px;color:#4ade80;margin-bottom:16px}
+.warning-box{background:#1c1400;border:1px solid #3d2f00;border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;margin-bottom:16px}
 
 /* PROGRESS BAR */
 .progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px}
 .progress-fill{height:100%;border-radius:2px;transition:width 0.3s}
 
 /* MOBILE */
-@media(max-width:900px){.camp-layout{grid-template-columns:1fr}.fg-row{grid-template-columns:1fr}}
+@media(max-width:900px){.camp-layout{grid-template-columns:1fr}.fg-row{grid-template-columns:1fr}.schedule-row{grid-template-columns:1fr}}
 @media(max-width:720px){.sidebar{width:56px}.logo span:last-child,.nav-item .label{display:none}.topbar{flex-direction:column;align-items:flex-start;gap:8px}}
 </style>
 </head>
@@ -172,7 +179,6 @@ const API = "https://coldreach-production-ce11.up.railway.app";
 let campaigns = [], accounts = [], modalSaveFn = null;
 let currentCampaignId = null, currentStepIndex = 0;
 
-// All supported variables
 const VARIABLES = ["{{firstName}}", "{{lastName}}", "{{company}}", "{{email}}", "{{iceBreaker}}"];
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
@@ -282,7 +288,12 @@ async function renderCampaigns() {
     }
     document.getElementById("content").innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-        ${campaigns.map(c => `
+        ${campaigns.map(c => {
+          const sched = c.schedule;
+          const scheduleText = sched?.startDate
+            ? `Starts ${sched.startDate} · ${sched.sendTime||"09:00"} IST`
+            : `Daily at ${sched?.sendTime||"09:00"} IST`;
+          return `
           <div class="card" style="cursor:pointer" onclick="renderCampaignDetail('${c.id}')">
             <div style="padding:18px">
               <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
@@ -294,10 +305,13 @@ async function renderCampaigns() {
                 <div><div style="font-size:16px;font-weight:700">${c.leads?.filter(l=>l.status==="sent").length||0}</div><div style="font-size:10px;color:var(--muted)">Sent</div></div>
                 <div><div style="font-size:16px;font-weight:700">${c.leads?.filter(l=>l.replied).length||0}</div><div style="font-size:10px;color:var(--muted)">Replied</div></div>
               </div>
-              <div style="margin-top:12px;font-size:11px;color:var(--muted)">${(c.sequence||[]).length} email steps</div>
+              <div style="margin-top:12px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between">
+                <span>${(c.sequence||[]).length} email steps</span>
+                <span>🕐 ${scheduleText}</span>
+              </div>
             </div>
-          </div>
-        `).join("")}
+          </div>`
+        }).join("")}
       </div>`;
   } catch(e) {
     document.getElementById("content").innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
@@ -323,10 +337,14 @@ async function renderCampaignDetail(id) {
   currentCampaignId = id;
   const c = campaigns.find(x => x.id === id);
   if (!c) return;
+
+  const queuedLeads = (c.leads || []).filter(l => l.status === "queued" || !l.status).length;
+
   setPage(c.name, `${c.leads?.length||0} leads · ${(c.sequence||[]).length} steps`,
-    `<div style="display:flex;gap:8px">
+    `<div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="renderCampaigns()">← Back</button>
       <button class="btn btn-sm ${c.status==="active"?"btn-ghost":"btn-green"}" onclick="toggleCampaignStatus('${id}')">${c.status==="active"?"⏸ Pause":"▶ Activate"}</button>
+      <button class="btn btn-yellow btn-sm" onclick="sendNow('${id}')" ${queuedLeads===0?"disabled style='opacity:0.4;cursor:not-allowed'":""}>⚡ Send Now (${queuedLeads} queued)</button>
       <button class="btn btn-primary btn-sm" onclick="openAddLeadsModal('${id}')">+ Add Leads</button>
     </div>`);
 
@@ -336,12 +354,14 @@ async function renderCampaignDetail(id) {
     if (activeTab === "sequence") renderSequenceTab(c);
     if (activeTab === "leads") renderLeadsTab(c);
     if (activeTab === "analytics") renderAnalyticsTab(c);
+    if (activeTab === "schedule") renderScheduleTab(c);
   }
 
   document.getElementById("content").innerHTML = `
     <div class="tabs" id="camp-tabs">
       <button class="tab-btn active" data-tab="sequence">✉️ Sequence</button>
       <button class="tab-btn" data-tab="leads">👥 Leads (${c.leads?.length||0})</button>
+      <button class="tab-btn" data-tab="schedule">🕐 Schedule</button>
       <button class="tab-btn" data-tab="analytics">📊 Analytics</button>
     </div>
     <div id="tab-content"></div>`;
@@ -357,14 +377,120 @@ async function renderCampaignDetail(id) {
   renderTabContent();
 }
 
+// ─── SEND NOW ─────────────────────────────────────────────────────────────────
+async function sendNow(id) {
+  const c = campaigns.find(x => x.id === id);
+  if (!c) return;
+
+  const queued = (c.leads || []).filter(l => l.status === "queued" || !l.status).length;
+  if (queued === 0) { alert("No queued leads to send."); return; }
+  if (!c.sequence || c.sequence.length === 0) { alert("Add email steps to the sequence first."); return; }
+
+  if (!confirm(`Send emails to all ${queued} queued leads right now?`)) return;
+
+  const btn = document.querySelector(".btn-yellow");
+  if (btn) { btn.textContent = "⏳ Sending..."; btn.disabled = true; }
+
+  try {
+    const result = await apiCall("POST", `/api/campaigns/${id}/send-now`);
+    const fresh = await apiCall("GET", "/api/campaigns");
+    campaigns = fresh;
+    alert(`✓ Done! ${result.sent} emails sent successfully.`);
+    renderCampaignDetail(id);
+  } catch(e) {
+    alert("Error: " + e.message);
+    if (btn) { btn.textContent = `⚡ Send Now (${queued} queued)`; btn.disabled = false; }
+  }
+}
+
+// ─── SCHEDULE TAB ─────────────────────────────────────────────────────────────
+function renderScheduleTab(c) {
+  const sched = c.schedule || {};
+  const today = new Date().toISOString().slice(0, 10);
+
+  document.getElementById("tab-content").innerHTML = `
+    <div style="max-width:500px">
+      <div class="info-box">
+        Set when this campaign sends emails daily. All times are in IST (Indian Standard Time).<br>
+        <strong>Start Date</strong> = campaign won't send before this date.<br>
+        <strong>Send Time</strong> = what time every day to send (IST).<br>
+        Leave Start Date empty to start immediately when activated.
+      </div>
+
+      <div class="schedule-box">
+        <div class="sched-title">📅 Schedule Settings</div>
+        <div class="schedule-row">
+          <div class="fg" style="margin-bottom:0">
+            <label>Start Date (IST)</label>
+            <input type="date" id="sched-start" value="${sched.startDate||""}" min="${today}"/>
+            <small>Leave empty to send from today</small>
+          </div>
+          <div class="fg" style="margin-bottom:0">
+            <label>Send Time (IST)</label>
+            <input type="time" id="sched-time" value="${sched.sendTime||"09:00"}"/>
+            <small>Time in IST — e.g. 09:00 for 9 AM</small>
+          </div>
+        </div>
+      </div>
+
+      ${sched.startDate || sched.sendTime ? `
+        <div class="warning-box">
+          Current schedule: ${sched.startDate ? `Starts <strong>${sched.startDate}</strong> · ` : ""}Daily at <strong>${sched.sendTime||"09:00"} IST</strong>
+        </div>` : ""}
+
+      <button class="btn btn-primary" onclick="saveSchedule('${c.id}')">💾 Save Schedule</button>
+      ${sched.startDate || sched.sendTime ? `
+        <button class="btn btn-ghost" style="margin-left:8px" onclick="clearSchedule('${c.id}')">✕ Clear Schedule</button>` : ""}
+    </div>`;
+}
+
+async function saveSchedule(id) {
+  const startDate = document.getElementById("sched-start")?.value || "";
+  const sendTime = document.getElementById("sched-time")?.value || "09:00";
+
+  const c = campaigns.find(x => x.id === id);
+  if (!c) return;
+
+  const schedule = { sendTime };
+  if (startDate) schedule.startDate = startDate;
+
+  try {
+    await apiCall("PUT", `/api/campaigns/${id}`, {
+      name: c.name, status: c.status, sequence: c.sequence, schedule
+    });
+    const fresh = await apiCall("GET", "/api/campaigns");
+    campaigns = fresh;
+    const updated = campaigns.find(x => x.id === id);
+    renderScheduleTab(updated);
+
+    const btn = document.querySelector("#tab-content .btn-primary");
+    if (btn) { btn.textContent = "✓ Saved"; setTimeout(() => { btn.textContent = "💾 Save Schedule"; }, 1500); }
+  } catch(e) { alert("Error: " + e.message); }
+}
+
+async function clearSchedule(id) {
+  if (!confirm("Clear schedule? Campaign will fall back to default 9 AM IST.")) return;
+  const c = campaigns.find(x => x.id === id);
+  if (!c) return;
+  try {
+    await apiCall("PUT", `/api/campaigns/${id}`, {
+      name: c.name, status: c.status, sequence: c.sequence, schedule: null
+    });
+    const fresh = await apiCall("GET", "/api/campaigns");
+    campaigns = fresh;
+    const updated = campaigns.find(x => x.id === id);
+    renderScheduleTab(updated);
+  } catch(e) { alert("Error: " + e.message); }
+}
+
+// ─── SEQUENCE TAB ─────────────────────────────────────────────────────────────
 function renderSequenceTab(c) {
   const seq = c.sequence || [];
   const step = seq[currentStepIndex];
 
-  // Variable chips for both subject and body
   const varChipsHtml = VARIABLES.map(v =>
-    `<div class="var-chip" onclick="insertVariable('${v}', 'step-subj')" title="Insert into subject">${v} (subj)</div>
-     <div class="var-chip" onclick="insertVariable('${v}', 'step-body')" title="Insert into body">${v} (body)</div>`
+    `<div class="var-chip" onclick="insertVariable('${v}','step-subj')" title="Insert into subject">${v} (subj)</div>
+     <div class="var-chip" onclick="insertVariable('${v}','step-body')" title="Insert into body">${v} (body)</div>`
   ).join("");
 
   document.getElementById("tab-content").innerHTML = `
@@ -387,7 +513,7 @@ function renderSequenceTab(c) {
           <div class="editor-box">
             <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:12px">Edit Step ${currentStepIndex+1}</div>
             <div style="margin-bottom:14px">
-              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">INSERT VARIABLE (click to add to subject or body)</div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">INSERT VARIABLE</div>
               <div class="var-chips">${varChipsHtml}</div>
             </div>
             <div class="fg"><label>Subject Line</label><input id="step-subj" value="${(step.subject||"").replace(/"/g,"&quot;")}" placeholder="Your subject line..."/></div>
@@ -405,6 +531,7 @@ function renderSequenceTab(c) {
     </div>`;
 }
 
+// ─── LEADS TAB ────────────────────────────────────────────────────────────────
 function renderLeadsTab(c) {
   const leads = c.leads || [];
   const queued = leads.filter(l => l.status==="queued" || !l.status).length;
@@ -438,6 +565,7 @@ function renderLeadsTab(c) {
     </div>`}`;
 }
 
+// ─── ANALYTICS TAB ────────────────────────────────────────────────────────────
 function renderAnalyticsTab(c) {
   const leads = c.leads || [];
   const total = leads.length;
@@ -481,7 +609,6 @@ function selectStep(i, id) {
   if (c) renderSequenceTab(c);
 }
 
-// Insert variable into a specific target field (subject or body)
 function insertVariable(v, targetId) {
   const el = document.getElementById(targetId);
   if (!el) return;
@@ -542,8 +669,6 @@ async function deleteLead(leadId, campaignId) {
     await apiCall("DELETE", `/api/leads/${leadId}`);
     const fresh = await apiCall("GET", "/api/campaigns");
     campaigns = fresh;
-    // Stay on leads tab of the same campaign
-    currentCampaignId = campaignId;
     const c = campaigns.find(x => x.id === campaignId);
     if (c) renderLeadsTab(c);
   } catch(e) { alert("Error: " + e.message); }
@@ -652,7 +777,7 @@ function handleCSV(e) {
         lastName: obj.lastname || obj.last_name || obj.lname || "",
         email: obj.email || obj.emailaddress || "",
         company: obj.company || obj.organization || obj.org || "",
-        iceBreaker: obj.icebreaker || obj.ice_breaker || obj.icbreaker || ""
+        iceBreaker: obj.icebreaker || obj.ice_breaker || ""
       };
       if (lead.email) leads.push(lead);
     }
@@ -706,7 +831,6 @@ async function renderAccounts() {
   }
 }
 
-// ─── DELETE ACCOUNT ────────────────────────────────────────────────────────────
 async function deleteAccount(id) {
   if (!confirm("Delete this account? This cannot be undone.")) return;
   try {
@@ -727,7 +851,7 @@ function openAddAccountModal() {
     <div class="fg"><label>Gmail Address *</label><input id="m-acc-email" type="email" placeholder="you@gmail.com" autofocus/></div>
     <div class="fg"><label>App Password *</label><input id="m-acc-pass" type="password" placeholder="16-character password (no spaces)"/></div>
     <div class="fg"><label>Label (nickname)</label><input id="m-acc-label" placeholder="e.g. Main Account"/></div>
-    <div class="fg"><label>Daily Send Limit</label><input id="m-acc-limit" type="number" value="15" min="1" max="50"/><small>Recommended: 15-20/day for new accounts</small></div>`,
+    <div class="fg"><label>Daily Send Limit</label><input id="m-acc-limit" type="number" value="15" min="1" max="500"/><small>Recommended: 15-20/day for new accounts</small></div>`,
     async () => {
       const email = document.getElementById("m-acc-email")?.value.trim();
       const appPassword = document.getElementById("m-acc-pass")?.value.trim();
@@ -793,7 +917,6 @@ async function renderAllLeads() {
   }
 }
 
-// Delete lead from the All Leads page (re-renders All Leads after)
 async function deleteLeadFromAll(leadId) {
   if (!confirm("Delete this lead? This cannot be undone.")) return;
   try {
