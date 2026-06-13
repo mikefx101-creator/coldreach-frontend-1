@@ -37,9 +37,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .btn{padding:9px 16px;border:none;border-radius:7px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.15s}
 .btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-dark)}
 .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface2);color:var(--text)}
-.btn-danger{background:transparent;color:var(--red);border:1px solid #3d1515}.btn-danger:hover{background:#3d1515}
+.btn-danger{background:transparent;color:var(--red);border:1px solid #3d1515}.btn-danger:hover{background:#3d1515;color:var(--red)}
 .btn-green{background:#14532d;color:var(--green);border:1px solid #166534}.btn-green:hover{background:#166534}
 .btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:5px 8px;font-size:12px;line-height:1}
 
 /* TABLE */
 .card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -170,6 +171,9 @@ tr:hover td{background:#0f0f0f}
 const API = "https://coldreach-production-ce11.up.railway.app";
 let campaigns = [], accounts = [], modalSaveFn = null;
 let currentCampaignId = null, currentStepIndex = 0;
+
+// All supported variables
+const VARIABLES = ["{{firstName}}", "{{lastName}}", "{{company}}", "{{email}}", "{{iceBreaker}}"];
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 async function apiCall(method, path, body = null) {
@@ -326,7 +330,6 @@ async function renderCampaignDetail(id) {
       <button class="btn btn-primary btn-sm" onclick="openAddLeadsModal('${id}')">+ Add Leads</button>
     </div>`);
 
-  const tabs = ["sequence","leads","analytics"];
   let activeTab = "sequence";
 
   function renderTabContent() {
@@ -357,6 +360,13 @@ async function renderCampaignDetail(id) {
 function renderSequenceTab(c) {
   const seq = c.sequence || [];
   const step = seq[currentStepIndex];
+
+  // Variable chips for both subject and body
+  const varChipsHtml = VARIABLES.map(v =>
+    `<div class="var-chip" onclick="insertVariable('${v}', 'step-subj')" title="Insert into subject">${v} (subj)</div>
+     <div class="var-chip" onclick="insertVariable('${v}', 'step-body')" title="Insert into body">${v} (body)</div>`
+  ).join("");
+
   document.getElementById("tab-content").innerHTML = `
     <div class="camp-layout">
       <div>
@@ -376,14 +386,12 @@ function renderSequenceTab(c) {
         ${step ? `
           <div class="editor-box">
             <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:12px">Edit Step ${currentStepIndex+1}</div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">INSERT VARIABLE (click to add to subject or body)</div>
+              <div class="var-chips">${varChipsHtml}</div>
+            </div>
             <div class="fg"><label>Subject Line</label><input id="step-subj" value="${(step.subject||"").replace(/"/g,"&quot;")}" placeholder="Your subject line..."/></div>
             <div class="fg"><label>Email Body</label><textarea id="step-body" style="min-height:160px">${step.body||""}</textarea></div>
-            <div style="margin-bottom:16px">
-              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">INSERT VARIABLE (click to insert at cursor)</div>
-              <div class="var-chips">
-                ${["{{firstName}}","{{lastName}}","{{company}}","{{email}}"].map(v => `<div class="var-chip" onclick="insertVariable('${v}')">${v}</div>`).join("")}
-              </div>
-            </div>
             ${currentStepIndex > 0 ? `<div class="fg"><label>Send after (days)</label><input id="step-day" type="number" value="${step.day||1}" min="1" max="30" style="width:120px"/></div>` : ""}
             <button class="btn btn-primary btn-sm" onclick="saveStep('${c.id}',${currentStepIndex})">💾 Save Step</button>
           </div>
@@ -414,7 +422,7 @@ function renderLeadsTab(c) {
     ${leads.length === 0 ? `<div class="empty"><div class="ei">👥</div><h3>No leads yet</h3><p>Add leads via CSV or manually</p></div>` : `
     <div class="card">
       <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th><th>Replied</th><th>Sent At</th></tr></thead>
+        <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Status</th><th>Replied</th><th>Sent At</th><th></th></tr></thead>
         <tbody>
           ${leads.map(l => `<tr>
             <td style="color:#60a5fa;font-weight:500">${l.email}</td>
@@ -423,6 +431,7 @@ function renderLeadsTab(c) {
             <td><span class="badge badge-${l.status==="sent"?"blue":"gray"}">${l.status||"queued"}</span></td>
             <td><span class="badge badge-${l.replied?"green":"gray"}">${l.replied?"✓ Yes":"No"}</span></td>
             <td style="font-size:11px;color:var(--muted)">${l.sentAt ? new Date(l.sentAt).toLocaleDateString() : "—"}</td>
+            <td><button class="btn btn-danger btn-icon" onclick="deleteLead('${l.id}','${c.id}')" title="Delete lead">🗑</button></td>
           </tr>`).join("")}
         </tbody>
       </table>
@@ -472,8 +481,9 @@ function selectStep(i, id) {
   if (c) renderSequenceTab(c);
 }
 
-function insertVariable(v) {
-  const el = document.getElementById("step-body");
+// Insert variable into a specific target field (subject or body)
+function insertVariable(v, targetId) {
+  const el = document.getElementById(targetId);
   if (!el) return;
   const s = el.selectionStart, e = el.selectionEnd;
   el.value = el.value.slice(0, s) + v + el.value.slice(e);
@@ -503,8 +513,7 @@ async function saveStep(id, idx) {
 async function addStep(id) {
   const c = campaigns.find(x => x.id === id);
   if (!c) return;
-  const newStep = { day: c.sequence.length, subject: "", body: "" };
-  c.sequence.push(newStep);
+  c.sequence.push({ day: c.sequence.length, subject: "", body: "" });
   currentStepIndex = c.sequence.length - 1;
   try {
     await apiCall("PUT", `/api/campaigns/${id}`, { name: c.name, status: c.status, sequence: c.sequence });
@@ -526,6 +535,20 @@ async function toggleCampaignStatus(id) {
   } catch(e) { alert("Error: " + e.message); }
 }
 
+// ─── DELETE LEAD ───────────────────────────────────────────────────────────────
+async function deleteLead(leadId, campaignId) {
+  if (!confirm("Delete this lead? This cannot be undone.")) return;
+  try {
+    await apiCall("DELETE", `/api/leads/${leadId}`);
+    const fresh = await apiCall("GET", "/api/campaigns");
+    campaigns = fresh;
+    // Stay on leads tab of the same campaign
+    currentCampaignId = campaignId;
+    const c = campaigns.find(x => x.id === campaignId);
+    if (c) renderLeadsTab(c);
+  } catch(e) { alert("Error: " + e.message); }
+}
+
 // ─── ADD LEADS MODAL ──────────────────────────────────────────────────────────
 function openAddLeadsModal(id) {
   currentCampaignId = id;
@@ -535,7 +558,7 @@ function openAddLeadsModal(id) {
       <button class="tab-btn" id="tab-manual-btn">✍️ Manual</button>
     </div>
     <div id="csv-panel">
-      <div class="info-box">Columns: <strong>firstName, lastName, email, company</strong><br>First row must be headers</div>
+      <div class="info-box">Columns: <strong>firstName, lastName, email, company, iceBreaker</strong><br>First row must be headers. iceBreaker is optional.</div>
       <div class="dropzone" id="dropzone" onclick="document.getElementById('csv-input').click()"
         ondragover="event.preventDefault();this.classList.add('dragover')"
         ondragleave="this.classList.remove('dragover')"
@@ -543,7 +566,7 @@ function openAddLeadsModal(id) {
         <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(event)"/>
         <div class="dz-icon">📂</div>
         <div class="dz-text">Drop your CSV here or click to browse</div>
-        <div class="dz-sub">Supports: firstName, lastName, email, company</div>
+        <div class="dz-sub">Supports: firstName, lastName, email, company, iceBreaker</div>
       </div>
       <div id="csv-preview"></div>
     </div>
@@ -554,6 +577,7 @@ function openAddLeadsModal(id) {
       </div>
       <div class="fg"><label>Email *</label><input id="m-email" type="email" placeholder="john@company.com"/></div>
       <div class="fg"><label>Company</label><input id="m-co" placeholder="Acme Inc"/></div>
+      <div class="fg"><label>Ice Breaker</label><input id="m-ib" placeholder="e.g. Loved your recent post on LinkedIn..."/><small>Used for {{iceBreaker}} variable in your emails</small></div>
     </div>`,
     async () => {
       const csvPanel = document.getElementById("csv-panel");
@@ -573,7 +597,13 @@ function openAddLeadsModal(id) {
         if (!email) { alert("Email is required"); return; }
         try {
           await apiCall("POST", `/api/campaigns/${currentCampaignId}/leads`, {
-            leads: [{ firstName: document.getElementById("m-fn")?.value||"", lastName: document.getElementById("m-ln")?.value||"", email, company: document.getElementById("m-co")?.value||"" }]
+            leads: [{
+              firstName: document.getElementById("m-fn")?.value || "",
+              lastName: document.getElementById("m-ln")?.value || "",
+              email,
+              company: document.getElementById("m-co")?.value || "",
+              iceBreaker: document.getElementById("m-ib")?.value || ""
+            }]
           });
           closeModal();
           const fresh = await apiCall("GET", "/api/campaigns");
@@ -621,7 +651,8 @@ function handleCSV(e) {
         firstName: obj.firstname || obj.first_name || obj.fname || "",
         lastName: obj.lastname || obj.last_name || obj.lname || "",
         email: obj.email || obj.emailaddress || "",
-        company: obj.company || obj.organization || obj.org || ""
+        company: obj.company || obj.organization || obj.org || "",
+        iceBreaker: obj.icebreaker || obj.ice_breaker || obj.icbreaker || ""
       };
       if (lead.email) leads.push(lead);
     }
@@ -649,7 +680,10 @@ async function renderAccounts() {
         ${accounts.map(a => {
           const pct = Math.min(100, ((a.sentToday||0) / (a.limit||15)) * 100);
           return `<div class="card" style="padding:18px">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${a.email}</div>
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px">
+              <div style="font-weight:700;font-size:14px">${a.email}</div>
+              <button class="btn btn-danger btn-icon" onclick="deleteAccount('${a.id}')" title="Delete account">🗑</button>
+            </div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${a.label||""}</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
               <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
@@ -670,6 +704,15 @@ async function renderAccounts() {
   } catch(e) {
     document.getElementById("content").innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
   }
+}
+
+// ─── DELETE ACCOUNT ────────────────────────────────────────────────────────────
+async function deleteAccount(id) {
+  if (!confirm("Delete this account? This cannot be undone.")) return;
+  try {
+    await apiCall("DELETE", `/api/accounts/${id}`);
+    renderAccounts();
+  } catch(e) { alert("Error: " + e.message); }
 }
 
 function openAddAccountModal() {
@@ -705,7 +748,7 @@ async function renderAllLeads() {
   document.getElementById("content").innerHTML = `<div style="color:var(--muted);padding:40px 0;text-align:center">Loading...</div>`;
   try {
     campaigns = await apiCall("GET", "/api/campaigns");
-    const allLeads = campaigns.flatMap(c => (c.leads||[]).map(l => ({ ...l, campaignName: c.name })));
+    const allLeads = campaigns.flatMap(c => (c.leads||[]).map(l => ({ ...l, campaignName: c.name, campaignId: c.id })));
     const replied = allLeads.filter(l => l.replied);
     const sent = allLeads.filter(l => l.status==="sent");
     const queued = allLeads.filter(l => !l.status || l.status==="queued");
@@ -733,7 +776,7 @@ async function renderAllLeads() {
       <div class="card">
         <div class="card-header">All Leads</div>
         ${allLeads.length === 0 ? `<div class="empty"><p>No leads yet</p></div>` : `<table>
-          <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Campaign</th><th>Status</th><th>Replied</th></tr></thead>
+          <thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Campaign</th><th>Status</th><th>Replied</th><th></th></tr></thead>
           <tbody>${allLeads.map(l => `<tr>
             <td style="color:#60a5fa">${l.email}</td>
             <td>${(l.firstName||"")} ${(l.lastName||"")}</td>
@@ -741,12 +784,22 @@ async function renderAllLeads() {
             <td style="font-size:12px">${l.campaignName}</td>
             <td><span class="badge badge-${l.status==="sent"?"blue":"gray"}">${l.status||"queued"}</span></td>
             <td><span class="badge badge-${l.replied?"green":"gray"}">${l.replied?"✓ Yes":"No"}</span></td>
+            <td><button class="btn btn-danger btn-icon" onclick="deleteLeadFromAll('${l.id}')" title="Delete lead">🗑</button></td>
           </tr>`).join("")}</tbody>
         </table>`}
       </div>`;
   } catch(e) {
     document.getElementById("content").innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
   }
+}
+
+// Delete lead from the All Leads page (re-renders All Leads after)
+async function deleteLeadFromAll(leadId) {
+  if (!confirm("Delete this lead? This cannot be undone.")) return;
+  try {
+    await apiCall("DELETE", `/api/leads/${leadId}`);
+    renderAllLeads();
+  } catch(e) { alert("Error: " + e.message); }
 }
 
 // ─── START ────────────────────────────────────────────────────────────────────
