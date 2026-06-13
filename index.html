@@ -491,12 +491,10 @@ async function saveStep(id, idx) {
   c.sequence[idx] = { day: idx === 0 ? 0 : parseInt(dayEl?.value || 1), subject: subj, body };
   try {
     await apiCall("PUT", `/api/campaigns/${id}`, { name: c.name, status: c.status, sequence: c.sequence });
-    // Update local
     const fresh = await apiCall("GET", "/api/campaigns");
     campaigns = fresh;
     const updated = campaigns.find(x => x.id === id);
     renderSequenceTab(updated);
-    // Flash success
     const btn = document.querySelector(".editor-box .btn-primary");
     if (btn) { btn.textContent = "✓ Saved"; setTimeout(() => { btn.textContent = "💾 Save Step"; }, 1500); }
   } catch(e) { alert("Error: " + e.message); }
@@ -619,7 +617,6 @@ function handleCSV(e) {
       const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
       const obj = {};
       headers.forEach((h, idx) => { obj[h] = vals[idx] || ""; });
-      // normalize common header variants
       const lead = {
         firstName: obj.firstname || obj.first_name || obj.fname || "",
         lastName: obj.lastname || obj.last_name || obj.lname || "",
@@ -648,10 +645,6 @@ async function renderAccounts() {
       return;
     }
     document.getElementById("content").innerHTML = `
-      <div class="info-box" style="margin-bottom:20px">
-        ℹ️ App passwords are stored securely in Railway environment variables.<br>
-        Format: <code style="background:#0a0a0a;padding:2px 6px;border-radius:4px">APP_PASSWORD_YOURGMAIL</code>
-      </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
         ${accounts.map(a => {
           const pct = Math.min(100, ((a.sentToday||0) / (a.limit||15)) * 100);
@@ -685,19 +678,21 @@ function openAddAccountModal() {
       <strong>Before adding:</strong><br>
       1. Enable 2-Step Verification on your Google Account<br>
       2. Go to Google Account → Security → App Passwords<br>
-      3. Generate password for "Mail"<br>
-      4. Add env var in Railway: <code style="background:#0a0a0a;padding:1px 6px;border-radius:3px">APP_PASSWORD_YOURGMAIL=xxxx xxxx xxxx xxxx</code>
+      3. Generate password for "Mail" (16 characters, remove spaces)<br>
+      4. Paste the password below
     </div>
     <div class="fg"><label>Gmail Address *</label><input id="m-acc-email" type="email" placeholder="you@gmail.com" autofocus/></div>
+    <div class="fg"><label>App Password *</label><input id="m-acc-pass" type="password" placeholder="16-character password (no spaces)"/></div>
     <div class="fg"><label>Label (nickname)</label><input id="m-acc-label" placeholder="e.g. Main Account"/></div>
     <div class="fg"><label>Daily Send Limit</label><input id="m-acc-limit" type="number" value="15" min="1" max="50"/><small>Recommended: 15-20/day for new accounts</small></div>`,
     async () => {
       const email = document.getElementById("m-acc-email")?.value.trim();
+      const appPassword = document.getElementById("m-acc-pass")?.value.trim();
       const label = document.getElementById("m-acc-label")?.value.trim();
       const limit = parseInt(document.getElementById("m-acc-limit")?.value) || 15;
-      if (!email) { alert("Email is required"); return; }
+      if (!email || !appPassword) { alert("Email and password are required"); return; }
       try {
-        await apiCall("POST", "/api/accounts", { email, label: label || email, limit });
+        await apiCall("POST", "/api/accounts", { email, label: label || email, limit, appPassword });
         closeModal();
         renderAccounts();
       } catch(e) { alert("Error: " + e.message); }
