@@ -842,21 +842,25 @@ async function deleteAccount(id) {
 function openAddAccountModal() {
   openModal("Add Gmail Account", `
     <div class="info-box">
-      <strong>Before adding:</strong><br>
-      1. Enable 2-Step Verification on your Google Account<br>
-      2. Go to Google Account → Security → App Passwords<br>
-      3. Generate password for "Mail" (16 characters, remove spaces)<br>
-      4. Paste the password below
+      <strong>New Way (Recommended):</strong><br>
+      Click the button below to authorize with Google. You won't need an app password.
     </div>
-    <div class="fg"><label>Gmail Address *</label><input id="m-acc-email" type="email" placeholder="you@gmail.com" autofocus/></div>
-    <div class="fg"><label>App Password *</label><input id="m-acc-pass" type="password" placeholder="16-character password (no spaces)"/></div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:16px" onclick="authorizeGmail()">🔐 Authorize Gmail Account</button>
+    
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+    
+    <div style="font-size:12px;color:var(--muted)">
+      <strong>OR use old method (app password):</strong>
+    </div>
+    <div class="fg"><label>Gmail Address</label><input id="m-acc-email" type="email" placeholder="you@gmail.com"/></div>
+    <div class="fg"><label>App Password</label><input id="m-acc-pass" type="password" placeholder="16-character password (no spaces)"/></div>
     <div class="fg"><label>Label (nickname)</label><input id="m-acc-label" placeholder="e.g. Main Account"/></div>
-    <div class="fg"><label>Daily Send Limit</label><input id="m-acc-limit" type="number" value="15" min="1" max="500"/><small>Recommended: 15-20/day for new accounts</small></div>`,
+    <div class="fg"><label>Daily Send Limit</label><input id="m-acc-limit" type="number" value="100" min="1" max="500"/><small>Recommended: 50-100/day</small></div>`,
     async () => {
       const email = document.getElementById("m-acc-email")?.value.trim();
       const appPassword = document.getElementById("m-acc-pass")?.value.trim();
       const label = document.getElementById("m-acc-label")?.value.trim();
-      const limit = parseInt(document.getElementById("m-acc-limit")?.value) || 15;
+      const limit = parseInt(document.getElementById("m-acc-limit")?.value) || 100;
       if (!email || !appPassword) { alert("Email and password are required"); return; }
       try {
         await apiCall("POST", "/api/accounts", { email, label: label || email, limit, appPassword });
@@ -864,6 +868,23 @@ function openAddAccountModal() {
         renderAccounts();
       } catch(e) { alert("Error: " + e.message); }
     }, "Add Account");
+}
+
+async function authorizeGmail() {
+  try {
+    const response = await apiCall("GET", "/auth/google");
+    if (response.authUrl) {
+      window.open(response.authUrl, "popup", "width=600,height=600");
+      // After user authorizes, they'll be redirected and account will be created
+      // Poll to refresh accounts list
+      setTimeout(() => {
+        renderAccounts();
+        closeModal();
+      }, 3000);
+    }
+  } catch(e) {
+    alert("Error: " + e.message);
+  }
 }
 
 // ─── ALL LEADS ────────────────────────────────────────────────────────────────
